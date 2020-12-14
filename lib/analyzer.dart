@@ -73,7 +73,7 @@ class Analyzer {
   Future<void> analyzePackage() async {
     // TODO: Index files in non-lib directories
     await ready;
-    var files = context.contextRoot.analyzedFiles();
+    var files = context.contextRoot.analyzedFiles().where((each) => p.extension(each) == '.dart');
     documents = await Future.wait(files.map(analyzeFile).toList());
     writeProject(packageDirAsUriString, documents);
   }
