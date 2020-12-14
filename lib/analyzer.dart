@@ -73,7 +73,7 @@ class Analyzer {
   Future<void> analyzePackage() async {
     // TODO: Index files in non-lib directories
     await ready;
-    var files = await dartFiles;
+    var files = context.contextRoot.analyzedFiles();
     documents = await Future.wait(files.map(analyzeFile).toList());
     writeProject(packageDirAsUriString, documents);
   }
@@ -90,15 +90,5 @@ class Analyzer {
     var visitor = ReferencesVisitor(document);
     resolved.unit.accept(visitor);
     return document;
-  }
-
-  /// All the .dart files within [libPath].
-  Future<List<String>> get dartFiles async {
-    var allFiles = Directory(libPath).list(recursive: true, followLinks: false);
-    var dart = await allFiles
-        .map((each) => each.path)
-        .where((each) => p.extension(each) == '.dart')
-        .toList();
-    return dart;
   }
 }

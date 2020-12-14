@@ -37,6 +37,8 @@ import 'package:lsif_indexer/lsif_graph.dart' as lsif;
 class ReferencesVisitor extends GeneralizingAstVisitor<void> {
 // TODO: Be able to follow imports.
 // TODO: Do prefixed references work? Probably only relevant in cross-package references
+// TODO: Link inherited/implemented members. The deprecatalog visitor may be useful to
+// look at.
 
   ReferencesVisitor(this.document);
 
