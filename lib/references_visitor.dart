@@ -33,6 +33,8 @@ import 'package:analyzer/dart/element/element.dart';
 
 import 'package:lsif_indexer/lsif_graph.dart' as lsif;
 
+import 'src/graph/utilities.dart';
+
 /// Visits the AST and constructs an [lsif.Document] with the [Reference]s and [Declaration]s found.
 class ReferencesVisitor extends GeneralizingAstVisitor<void> {
 // TODO: Be able to follow imports.
@@ -50,10 +52,11 @@ class ReferencesVisitor extends GeneralizingAstVisitor<void> {
     super.visitSimpleIdentifier(node);
 
     var element = elementFor(node);
+
     // TODO: What about the case of declarations here that are only referenced elsewhere?
     // Would visitDeclaredIdentifier or visitDeclaredElement work for that?
     if (element != null && element.library != null) {
-      createReference(referenceNode: node, staticElement: element);
+      AstReference(document, node, element).note();
     }
   }
 
@@ -68,21 +71,80 @@ class ReferencesVisitor extends GeneralizingAstVisitor<void> {
     }
     return null;
   }
+}
+
+/// A specific reference in the source.
+class AstReference {
+  lsif.Document document;
+  SimpleIdentifier node;
+  Element element;
+
+  AstReference(this.document, this.node, this.element);
+
+  void note() {
+    checkForLocalReference();
+    checkForExternalReference();
+  }
+
+  void checkForLocalReference() {
+    if (declaringNode is! Declaration || node.inDeclarationContext()) {
+      return;
+    }
+
+    if (localDeclaration != null) {
+      var reference = lsif.LocalReference(document, element.displayName,
+          node.offset, node.end, localDeclaration);
+      document.references.add(reference);
+    }
+  }
+
+  void checkForExternalReference() {
+    var external = externalDeclarationFor(declaringElement);
+    if (external != null) {
+      document.addExternal(external);
+      var reference = lsif.ExternalReference(
+          document, element.displayName, node.offset, node.end, external);
+      document.externalReferences.add(reference);
+    }
+  }
+
+  lsif.Declaration _localDeclaration;
+  lsif.Declaration get localDeclaration =>
+      _localDeclaration ??= _findLocalDeclaration();
+
+  lsif.Declaration _findLocalDeclaration() {
+    if (!_isLocal(declaringElement)) return null;
+    var node = narrow(declaringNode);
+    var declaration = lsif.Declaration(
+        document: document,
+        name: declaringElement.displayName,
+        offset: node.offset,
+        end: node.end,
+        docString: declaringElement.documentationComment,
+        location: declaringElement.location.encoding);
+
+    return document.addDeclaration(declaration);
+  }
+
+  Element _declaringElement;
+  Element get declaringElement => _declaringElement ??= _findDeclaringElement();
 
   /// The declaring element, which may be the same as [element]
-  Element declaringElement(Element element) {
-    var node = declaringNode(element);
-    if (node == null && element is PropertyAccessorElement) {
-      return element.variable;
+  Element _findDeclaringElement() {
+    if (declaringNode == null && element is PropertyAccessorElement) {
+      return (element as PropertyAccessorElement).variable;
     } else if (node == null && element is FieldFormalParameterElement) {
-      return element.field;
+      return (element as FieldFormalParameterElement).field;
     } else {
       return element;
     }
   }
 
+  AstNode _declaringNode;
+  AstNode get declaringNode => _declaringNode ??= _findDeclaringNode();
+
   /// The node for the declaration of [element].
-  AstNode declaringNode(Element element) {
+  AstNode _findDeclaringNode() {
     var session = element.session;
     var parsedLib = session.getParsedLibraryByElement(element.library);
     // This can be various sorts of declaration, but they all have a `node`.
@@ -105,36 +167,17 @@ class ReferencesVisitor extends GeneralizingAstVisitor<void> {
     return declarationNode;
   }
 
-  /// Create a [Reference] and [Declaration] for referenceNode and its definition.
-  void createReference({SimpleIdentifier referenceNode, Element staticElement}) {
-    var declarationElement = declaringElement(staticElement);
-    var declarationNode = declaringNode(declarationElement);
+  /// Is this element part of the current library.
+  bool _isLocal(Element element) => element.source.uri == document.packageUri;
 
-    /// Create a reference and the corresponding declaration if it doesn't already exist.
-    if (declarationNode is Declaration && !referenceNode.inDeclarationContext()) {
-      var canonical;
-      if (declarationElement.source.uri == document.packageUri) {
-        declarationNode = narrow(declarationNode);
-        var declaration = lsif.Declaration(
-            document: document,
-            name: declarationElement.displayName,
-            offset: declarationNode.offset,
-            end: declarationNode.end,
-            docString: declarationElement.documentationComment);
+  /// Does this element come from the Dart SDK.
+  bool _isSdk(Element element) => element.library.identifier.startsWith('dart');
 
-        canonical = document.declarations.lookup(declaration);
-        if (canonical == null) {
-          document.declarations.add(declaration);
-          canonical = declaration;
-        }
-      }
-      // Add the reference if the declaration is in this document.
-      // TODO: Cross-document references!!
-      if (canonical != null) {
-        var reference = lsif.Reference(document, staticElement.displayName, referenceNode.offset,
-            referenceNode.end, canonical);
-        document.references.add(reference);
-      }
+  lsif.ExternalDeclaration externalDeclarationFor(Element element) {
+    if (_isLocal(element) || _isSdk(element)) {
+      return null;
     }
+    var declaration = lsif.ExternalDeclaration(element.location.encoding);
+    return document.externalDeclarations.addIfAbsent(declaration);
   }
 }

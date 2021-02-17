@@ -27,7 +27,6 @@
 // Copyright Anton Astashov. All rights reserved.
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
-
 import 'package:collection/collection.dart';
 
 import 'lsif_graph.dart';
@@ -57,27 +56,65 @@ void _emitProject(Project p) {
 
 void _emitDocument(Document document) {
   // TODO: Organize this better.
-  var groupedReferences = groupBy(document.references, (Reference ref) => ref.declaration);
+  var groupedReferences =
+      groupBy(document.references, (LocalReference ref) => ref.declaration);
   for (var declaration in document.declarations) {
     declaration.emit();
     var references = groupedReferences[declaration];
+    // For each declaration there is a referenceResult.
     var referenceResult = ReferenceResult()..emit();
     for (var reference in references) {
       reference.emit();
     }
+    // Connect the declaration to the reference ranges, via the referenceResult.
     var ranges = references.map((each) => each.range.jsonId).toList();
     var referenceItem = Item(document, 'references')
       ..outV = referenceResult.jsonId
       ..inVs = ranges;
     referenceItem.emit();
+
+    // Connect the declaration to the declaration range via the referenceResult.
     var definitionItem = Item(document, 'definitions')
       ..inVs = [declaration.range.jsonId]
       ..outV = referenceResult.jsonId;
     definitionItem.emit();
+
+    // Connect the referenceResult to the declaration.
     (References()
           ..inV = referenceResult.jsonId
           ..outV = declaration.resultSet.jsonId)
         .emit();
+
+    // Connect the resultSet to the declaration range.
     Next(declaration.resultSet.jsonId, declaration.range.jsonId).emit();
+  }
+  var groupedExternals = groupBy(
+      document.externalReferences, (ExternalReference ref) => ref.declaration);
+  for (var importMoniker in groupedExternals.keys) {
+    importMoniker.emit(); // 22
+    var referenceResult = ReferenceResult()..emit(); // 116
+    var references = groupedExternals[importMoniker];
+    for (var reference in references) {
+      // 119, referenceLinks
+      reference.link(referenceResult).emit();
+      reference.emit();
+    }
+
+    // Connect the referenceResult to the declaration.
+    (References() // textdocument/references, 117
+          ..inV = referenceResult.jsonId
+          ..outV = importMoniker.resultSet.jsonId)
+        .emit();
+
+    /// ### need referenceResults - 118
+    // Ignore 'definitions' for the moment, that's for things like links from subclass overrides to the parent.
+    // Connect the import to the reference ranges, via the referenceResult.
+    var ranges = references.map((each) => each.range.jsonId).toList();
+    var referenceItem = Item(document, 'references')
+      ..outV = referenceResult.jsonId
+      ..inVs = ranges;
+    referenceItem.emit();
+
+    /// ##################
   }
 }

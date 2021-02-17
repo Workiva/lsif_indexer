@@ -31,6 +31,7 @@ import 'dart:io';
 
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/analysis/analysis_context.dart';
+import 'package:analyzer/dart/analysis/results.dart';
 import 'package:package_config/package_config.dart';
 import 'package:path/path.dart' as p;
 import 'package:lsif_indexer/lsif_graph.dart' as lsif;
@@ -59,12 +60,15 @@ class Analyzer {
 
   String get libPath => p.join(packageDir.path, 'lib');
 
+  Map<String, ResolvedUnitResult> resolved = {};
+
   Future<void> initialize() async {
     // This is split out into a separate method because constructors can't return a Future.
     // So the constructor calls this and sets a [ready] variable.
     packages = await findPackageConfig(packageDir);
-    var allPackageRoots =
-        packages.packages.map((each) => p.normalize(each.packageUriRoot.toFilePath())).toList();
+    var allPackageRoots = packages.packages
+        .map((each) => p.normalize(each.packageUriRoot.toFilePath()))
+        .toList();
     var collection = AnalysisContextCollection(includedPaths: allPackageRoots);
     context = collection.contextFor(libPath);
   }
@@ -73,7 +77,12 @@ class Analyzer {
   Future<void> analyzePackage() async {
     // TODO: Index files in non-lib directories
     await ready;
-    var files = context.contextRoot.analyzedFiles().where((each) => p.extension(each) == '.dart');
+    var files = context.contextRoot
+        .analyzedFiles()
+        .where((each) => p.extension(each) == '.dart');
+
+    await Future.wait(files
+        .map((f) async => await context.currentSession.getResolvedUnit(f)));
     documents = await Future.wait(files.map(analyzeFile).toList());
     writeProject(packageDirAsUriString, documents);
   }

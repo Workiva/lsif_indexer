@@ -79,7 +79,8 @@ const labelsToIgnore = ['metaData'];
 /// Throws if we can't find an entry, so we can debug it.
 Map<String, Object> correspondingEntry(
     Map<String, Object> entry, Set<Map<String, Object>> available) {
-  var sameLabel = available.where((each) => each['label'] == entry['label']).toList();
+  var sameLabel =
+      available.where((each) => each['label'] == entry['label']).toList();
   print('Looking for match for $entry in ${sameLabel.length} candidates');
   for (var candidate in sameLabel) {
     print('Comparing\n  $candidate');
@@ -99,7 +100,8 @@ bool match(Map<String, Object> entry, Map<String, Object> candidate) {
   }
 
   /// We write some debug info to make the files easier to read manually. Ignore that.
-  var debugKeys = entry.keys.where((each) => each.startsWith('_debug')).toList();
+  var debugKeys =
+      entry.keys.where((each) => each.startsWith('_debug')).toList();
   for (var key in debugKeys) {
     entry.remove(key);
   }

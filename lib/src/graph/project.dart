@@ -27,7 +27,6 @@
 // Copyright Anton Astashov. All rights reserved.
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
-
 import 'package:lsif_indexer/lsif_graph.dart';
 
 class Project extends Scope {
@@ -35,8 +34,39 @@ class Project extends Scope {
   String get label => 'project';
   List<Document> documents;
 
-  Project(this.documents);
+  Project(this.documents) {
+    for (var doc in documents) {
+      doc.project = this;
+    }
+  }
 
   @override
   Map<String, Object> toLsif() => {...super.toLsif(), 'kind': 'dart'};
+
+  PackageInformation _packageInformation;
+  PackageInformation get packageInformation => _packageInformation ??=
+      PackageInformation('${documents.first.packageUri}');
+
+  @override
+  void emit() {
+    super.emit();
+    packageInformation.emit();
+  }
+}
+
+class PackageInformation extends Vertex {
+  PackageInformation(this.url);
+
+  /// The URL for the package.
+  String url;
+
+  @override
+  String get label => 'packageInformation';
+  @override
+  Map<String, Object> toLsif() => {
+        ...super.toLsif(),
+        'name': url,
+        'manager': 'something',
+        'version': 'v0.0.1'
+      };
 }

@@ -27,7 +27,6 @@
 // Copyright Anton Astashov. All rights reserved.
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
-
 import 'package:lsif_indexer/lsif_graph.dart';
 
 /// Graph entities that have a particular place in the source -
@@ -38,7 +37,6 @@ abstract class Identifier {
   String name;
 
   /// The character offset within the file.
-
   int offset;
 
   /// The character offset within the file of the end of this.
@@ -59,7 +57,8 @@ abstract class Identifier {
       other.end == end;
 
   @override
-  int get hashCode => document.hashCode ^ name.hashCode ^ offset.hashCode ^ end.hashCode;
+  int get hashCode =>
+      document.hashCode ^ name.hashCode ^ offset.hashCode ^ end.hashCode;
 
   /// The *one-based* line number containing this.
   int lineNumber;
@@ -88,21 +87,38 @@ abstract class Identifier {
       '{$runtimeType($name) at ${range.source.lineNumber}:${range.source.lineOffset}';
 }
 
+abstract class AbstractDeclaration {
+  void emit();
+
+  Range get range;
+}
+
 /// The declaration of anything - method, class, variable, getter, function, etc.
-class Declaration extends Identifier {
-  Declaration({Document document, String name, int offset, int end, String docString})
+class Declaration extends Identifier implements AbstractDeclaration {
+  Declaration(
+      {Document document,
+      String name,
+      int offset,
+      int end,
+      String docString,
+      this.location})
       : super(document, name, offset, end) {
     hoverText = docString == null ? sourceLineAsDoc : toMarkdown(docString);
     hoverResult = HoverResult(hoverText);
     hover = Hover(resultSet.jsonId, hoverResult.jsonId);
   }
 
+  /// The location in terms of the ElementLocation.encoding.
+  String location;
+
   /// If there isn't a doc comment, we just use the source line converted loosely to markdown.
   String get sourceLineAsDoc => '```dart\n${document.line(lineNumber)}\n```';
 
   @override
   bool operator ==(Object other) {
-    return super == other && other is Declaration && other.hoverText == hoverText;
+    return super == other &&
+        other is Declaration &&
+        other.hoverText == hoverText;
   }
 
   @override
@@ -126,15 +142,29 @@ class Declaration extends Identifier {
     ..outV = resultSet.jsonId
     ..inV = definitionResult.jsonId;
 
+  ExportedDeclaration _export;
+  ExportedDeclaration get export =>
+      _export ??= ExportedDeclaration(location, range.jsonId);
+
   /// Write out the LSIF entities for this declaration.
   void emit() {
+    // The actual source definition.
     range.emit();
     resultSet.emit();
     definitionResult.emit();
+
+    Next(resultSet.jsonId, range.jsonId).emit();
+    // textdocument/definition, links from definitionResult to resultSet
+    definition.emit();
+
+    // The `item` links from the ranges to the definitionResult.
     item.emit();
     hoverResult.emit();
-    definition.emit();
     hover.emit();
+    // Don't emit an export moniker for private identifiers.
+    if (!name.startsWith('_')) {
+      export.emit();
+    }
   }
 }
 
@@ -175,8 +205,9 @@ String toMarkdown(String docstring) {
 /// A reference to a declaration.
 ///
 /// This only handles references within the same package (or maybe even just file?).
-class Reference extends Identifier {
-  Reference(Document document, String name, int offset, int end, this.declaration)
+class LocalReference extends Identifier implements Reference {
+  LocalReference(
+      Document document, String name, int offset, int end, this.declaration)
       : super(document, name, offset, end) {
     next = Next(declaration.resultSet.jsonId, range.jsonId);
   }
@@ -184,8 +215,119 @@ class Reference extends Identifier {
   Declaration declaration;
   Next next;
 
-  void emit() {
+  @override
+  void emit(ReferenceResult result) {
     range.emit();
     next.emit();
   }
+}
+
+abstract class Reference {
+  void emit(ReferenceResult result);
+
+  Range get range;
+}
+
+class ExternalReference extends Identifier implements Reference {
+  ExternalReference(
+      Document document, String name, int offset, int end, this.declaration)
+      : super(document, name, offset, end);
+
+  ExternalDeclaration declaration;
+
+  @override
+  void emit(ReferenceResult result) {
+    range.emit();
+  }
+}
+
+abstract class Moniker extends Vertex {
+  @override
+  String get label => 'moniker';
+
+  /// The identifier within the 'dart' scheme of this declaration.
+  ///
+  /// We expect this to correspond to the `encoding` string form of an ElementLocation
+  /// in the Dart analyzer.
+  String identifier;
+
+  String get kind;
+
+  @override
+  Map<String, Object> toLsif() => {
+        ...super.toLsif(),
+        'scheme': 'dart',
+        //    'unique': 'scheme',   # currently unused
+        'kind': kind,
+        'identifier': identifier
+      };
+
+  Moniker(this.identifier);
+}
+
+/// A reference to an external declaration.
+///
+/// This corresponds to a moniker import in the graph.
+class ExternalDeclaration extends Moniker implements AbstractDeclaration {
+  @override
+  String get label => 'moniker';
+
+  @override
+  String get kind => 'import';
+  // ### need range
+  String library;
+  List<String> qualifiers;
+  ExternalDeclaration(String identifier) : super(identifier);
+
+  var resultSet = ResultSet();
+}
+
+/// An exported declaration - corresponds to an export moniker.
+class ExportedDeclaration extends Moniker {
+  @override
+  String get kind => 'export';
+
+  Document document;
+  String range;
+
+  ExportedDeclaration(String identifier, this.range) : super(identifier);
+
+  PackageInformationEdge get packageInformationEdge => PackageInformationEdge(
+      jsonId, document.project.packageInformation.jsonId);
+
+  MonikerEdge get monikerEdge => MonikerEdge(jsonId, range);
+
+  @override
+  void emit() {
+    super.emit();
+    // packageInformationVertex.emit(); //### No, once at the beginning
+    packageInformationEdge.emit();
+    monikerEdge.emit();
+  }
+}
+
+class PackageInformationEdge extends Edge {
+  @override
+  String get label => 'packageInformation';
+  PackageInformationEdge(this.moniker, this.packageInformation);
+
+  String moniker;
+  String packageInformation;
+
+  @override
+  Map<String, Object> toLsif() =>
+      {...super.toLsif(), 'outV': moniker, 'inV': packageInformation};
+}
+
+class MonikerEdge extends Edge {
+  @override
+  String get label => 'moniker';
+  MonikerEdge(this.moniker, this.range);
+
+  String moniker;
+  String range;
+
+  @override
+  Map<String, Object> toLsif() =>
+      {...super.toLsif(), 'inV': moniker, 'outV': range};
 }
