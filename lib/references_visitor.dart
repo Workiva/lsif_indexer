@@ -27,10 +27,9 @@
 // Copyright Anton Astashov. All rights reserved.
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
-import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/ast/ast.dart';
+import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/element/element.dart';
-
 import 'package:lsif_indexer/lsif_graph.dart' as lsif;
 
 import 'src/graph/utilities.dart';
@@ -108,14 +107,14 @@ class AstReference {
     }
   }
 
-  lsif.Declaration _localDeclaration;
-  lsif.Declaration get localDeclaration =>
+  lsif.LocalDeclaration _localDeclaration;
+  lsif.LocalDeclaration get localDeclaration =>
       _localDeclaration ??= _findLocalDeclaration();
 
-  lsif.Declaration _findLocalDeclaration() {
+  lsif.LocalDeclaration _findLocalDeclaration() {
     if (!_isLocal(declaringElement)) return null;
     var node = narrow(declaringNode);
-    var declaration = lsif.Declaration(
+    var declaration = lsif.LocalDeclaration(
         document: document,
         name: declaringElement.displayName,
         offset: node.offset,
@@ -173,11 +172,11 @@ class AstReference {
   /// Does this element come from the Dart SDK.
   bool _isSdk(Element element) => element.library.identifier.startsWith('dart');
 
-  lsif.ExternalDeclaration externalDeclarationFor(Element element) {
+  lsif.ImportedDeclaration externalDeclarationFor(Element element) {
     if (_isLocal(element) || _isSdk(element)) {
       return null;
     }
-    var declaration = lsif.ExternalDeclaration(element.location.encoding);
+    var declaration = lsif.ImportedDeclaration(element.location.encoding);
     return document.externalDeclarations.addIfAbsent(declaration);
   }
 }

@@ -30,7 +30,7 @@
 import 'package:lsif_indexer/lsif_graph.dart';
 
 /// Graph entities that have a particular place in the source -
-/// currently [Reference]s and [Declaration]s.
+/// currently [Reference]s and [LocalDeclaration]s.
 abstract class Identifier {
   // TODO: Better name.
   Document document;
@@ -89,13 +89,11 @@ abstract class Identifier {
 
 abstract class AbstractDeclaration {
   void emit();
-
-  Range get range;
 }
 
 /// The declaration of anything - method, class, variable, getter, function, etc.
-class Declaration extends Identifier implements AbstractDeclaration {
-  Declaration(
+class LocalDeclaration extends Identifier implements AbstractDeclaration {
+  LocalDeclaration(
       {Document document,
       String name,
       int offset,
@@ -117,7 +115,7 @@ class Declaration extends Identifier implements AbstractDeclaration {
   @override
   bool operator ==(Object other) {
     return super == other &&
-        other is Declaration &&
+        other is LocalDeclaration &&
         other.hoverText == hoverText;
   }
 
@@ -137,6 +135,8 @@ class Declaration extends Identifier implements AbstractDeclaration {
     ..outV = definitionResult.jsonId
     ..inVs = [range.jsonId];
 
+  Item _definitionsItem; //######
+
   Definition _definition;
   Definition get definition => _definition ??= Definition()
     ..outV = resultSet.jsonId
@@ -144,21 +144,22 @@ class Declaration extends Identifier implements AbstractDeclaration {
 
   ExportedDeclaration _export;
   ExportedDeclaration get export =>
-      _export ??= ExportedDeclaration(location, range.jsonId);
+      _export ??= ExportedDeclaration(location, this);
 
   /// Write out the LSIF entities for this declaration.
+  @override
   void emit() {
     // The actual source definition.
-    range.emit();
     resultSet.emit();
-    definitionResult.emit();
-
+    range.emit();
     Next(resultSet.jsonId, range.jsonId).emit();
+
+    // Support textdocument/definition
+    definitionResult.emit();
     // textdocument/definition, links from definitionResult to resultSet
     definition.emit();
-
-    // The `item` links from the ranges to the definitionResult.
     item.emit();
+
     hoverResult.emit();
     hover.emit();
     // Don't emit an export moniker for private identifiers.
@@ -205,40 +206,74 @@ String toMarkdown(String docstring) {
 /// A reference to a declaration.
 ///
 /// This only handles references within the same package (or maybe even just file?).
-class LocalReference extends Identifier implements Reference {
+class LocalReference extends Identifier with Reference {
   LocalReference(
       Document document, String name, int offset, int end, this.declaration)
       : super(document, name, offset, end) {
     next = Next(declaration.resultSet.jsonId, range.jsonId);
   }
 
-  Declaration declaration;
+  LocalDeclaration declaration;
   Next next;
 
   @override
-  void emit(ReferenceResult result) {
-    range.emit();
+  References get textDocReferences => References()
+    ..to = referenceResult.jsonId
+    ..from = declaration.resultSet.jsonId;
+
+  Item get definitionsItem => Item(document, 'definitions')
+    ..to = [range.jsonId]
+    ..from = referenceResult.jsonId;
+
+  @override
+  void emit() {
+    super.emit();
     next.emit();
+    definitionsItem.emit();
   }
 }
 
-abstract class Reference {
-  void emit(ReferenceResult result);
+mixin Reference {
+  void emit() {
+    range.emit();
+    referenceResult.emit();
+    textDocReferences.emit();
+    referenceItem.emit();
+  }
+
+  ReferenceResult referenceResult = ReferenceResult();
+
+  Document get document;
 
   Range get range;
+
+  References get textDocReferences;
+
+  Item get referenceItem => Item(document, 'references')
+    ..to = [range.jsonId]
+    ..from = referenceResult.jsonId;
 }
 
-class ExternalReference extends Identifier implements Reference {
+class ExternalReference extends Identifier with Reference {
   ExternalReference(
       Document document, String name, int offset, int end, this.declaration)
       : super(document, name, offset, end);
 
-  ExternalDeclaration declaration;
+  ImportedDeclaration declaration;
 
   @override
-  void emit(ReferenceResult result) {
-    range.emit();
+  void emit() {
+    super.emit();
   }
+
+  // This is extremely weird. An external reference seems to point from the reference range
+  // to the referenceResult. But a local reference is from the declaration's resultSet.
+  // I guess this is because an external declaration doesn't have a result set, but it
+  // still seems weird.
+  @override
+  References get textDocReferences => References()
+    ..to = referenceResult.jsonId
+    ..from = range.jsonId;
 }
 
 abstract class Moniker extends Vertex {
@@ -268,16 +303,15 @@ abstract class Moniker extends Vertex {
 /// A reference to an external declaration.
 ///
 /// This corresponds to a moniker import in the graph.
-class ExternalDeclaration extends Moniker implements AbstractDeclaration {
+class ImportedDeclaration extends Moniker implements AbstractDeclaration {
   @override
   String get label => 'moniker';
 
   @override
   String get kind => 'import';
-  // ### need range
   String library;
   List<String> qualifiers;
-  ExternalDeclaration(String identifier) : super(identifier);
+  ImportedDeclaration(String identifier) : super(identifier);
 
   var resultSet = ResultSet();
 }
@@ -287,20 +321,20 @@ class ExportedDeclaration extends Moniker {
   @override
   String get kind => 'export';
 
-  Document document;
-  String range;
+  Document get document => declaration.document;
+  LocalDeclaration declaration;
 
-  ExportedDeclaration(String identifier, this.range) : super(identifier);
+  ExportedDeclaration(String identifier, this.declaration) : super(identifier);
 
   PackageInformationEdge get packageInformationEdge => PackageInformationEdge(
       jsonId, document.project.packageInformation.jsonId);
 
-  MonikerEdge get monikerEdge => MonikerEdge(jsonId, range);
+  MonikerEdge get monikerEdge =>
+      MonikerEdge(jsonId, declaration.resultSet.jsonId);
 
   @override
   void emit() {
     super.emit();
-    // packageInformationVertex.emit(); //### No, once at the beginning
     packageInformationEdge.emit();
     monikerEdge.emit();
   }

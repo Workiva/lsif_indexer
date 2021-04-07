@@ -29,6 +29,11 @@
 
 import 'package:lsif_indexer/lsif_graph.dart';
 
+/// Contains the project and packageInformation nodes.
+/// 
+/// In Dart (I think) a project corresponds to a Dart package, so we should have
+/// exactly one packageInformation that we emit at the start, and it applies to
+/// all documents.
 class Project extends Scope {
   @override
   String get label => 'project';

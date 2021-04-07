@@ -35,10 +35,10 @@ import 'dart:convert';
 import 'src/graph/document.dart';
 import 'src/graph/identifier.dart';
 
-export 'src/graph/project.dart';
 export 'src/graph/document.dart';
-export 'src/graph/identifier.dart';
 export 'src/graph/event.dart';
+export 'src/graph/identifier.dart';
+export 'src/graph/project.dart';
 
 /// An element in the graph model, either a vertex or an edge.
 abstract class Element {
@@ -145,6 +145,12 @@ class Item extends Edge {
   Item(this.document, [this.property]) : super();
   String outV;
   List<String> inVs;
+
+  set from(String origin) => outV = origin;
+  String get from => outV;
+
+  set to(List<String> destinations) => inVs = destinations;
+  List<String> get to => inVs;
   Document document;
 
   // Seems to be some kind of edge label. The only current usage is to distinguish
@@ -158,8 +164,7 @@ class Item extends Edge {
         'inVs': inVs,
         'shard': document
             .jsonId, // TODO: I think they just essentially renamed document to shard for edges
-        if (property != null)
-          'property': property
+        if (property != null) 'property': property
       };
 }
 
@@ -175,10 +180,10 @@ class Definition extends Edge {
 class References extends Edge {
   @override
   String get label => 'textDocument/references';
-  String outV;
-  String inV;
+  String from;
+  String to;
   @override
-  Map<String, Object> toLsif() => {...super.toLsif(), 'outV': outV, 'inV': inV};
+  Map<String, Object> toLsif() => {...super.toLsif(), 'outV': from, 'inV': to};
 }
 
 class Metadata extends Element {
@@ -195,13 +200,13 @@ class Metadata extends Element {
   Map<String, Object> toLsif() => {
         ...super.toLsif(),
         'projectRoot': projectRoot,
-        'version': '0.5.0',
+        'version': '0.4.3',
         'positionEncoding': 'utf-16',
         'toolInfo': toolInfo,
       };
 
   Map<String, Object> get toolInfo =>
-      {'name': 'simple_lsif', 'args': [], 'version': 'dev'};
+      {'name': 'lsif_indexer', 'args': [], 'version': 'dev'};
 }
 
 class Contains extends Edge {
