@@ -52,5 +52,9 @@ class Document extends Scope {
   Contains get contains => Contains(this);
 
   @override
-  Map<String, Object> toLsif() => {...super.toLsif(), 'uri': '$uri', 'languageId': 'dart'};
+  Map<String, Object> toLsif() => {
+        ...super.toLsif(),
+        'uri': '$uri',
+        'languageId': 'dart',
+      };
 }

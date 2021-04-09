@@ -101,7 +101,10 @@ class Range extends Vertex {
   Map<String, Object> toLsif() => {
         ...super.toLsif(),
         'start': {'line': source.lineNumber, 'character': source.lineOffset},
-        'end': {'line': source.endLineNumber, 'character': source.endLineOffset},
+        'end': {
+          'line': source.endLineNumber,
+          'character': source.endLineOffset,
+        },
         // Attributes that make it easier to read the emitted file but aren't used.
         '_debugName': source.name,
         '_debugContainingFile': '${source.document.packageUri}',
@@ -195,7 +198,11 @@ class Metadata extends Element {
         'toolInfo': toolInfo,
       };
 
-  Map<String, Object> get toolInfo => {'name': 'simple_lsif', 'args': [], 'version': 'dev'};
+  Map<String, Object> get toolInfo => {
+        'name': 'simple_lsif',
+        'args': [],
+        'version': 'dev',
+      };
 }
 
 class Contains extends Edge {
@@ -210,7 +217,8 @@ class Contains extends Edge {
   Map<String, Object> toLsif() =>
       {...super.toLsif(), 'outV': container.jsonId, 'inVs': incomingEdges};
 
-  List<String> get incomingEdges => [...container.references, ...container.declarations]
-      .map((each) => each.range.jsonId)
-      .toList();
+  List<String> get incomingEdges => [
+        ...container.references,
+        ...container.declarations,
+      ].map((each) => each.range.jsonId).toList();
 }

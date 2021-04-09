@@ -36,8 +36,12 @@ abstract class Event extends Vertex {
   Event(this.scope) : super();
   Element scope;
   @override
-  Map<String, Object> toLsif() =>
-      {...super.toLsif(), 'kind': _kind, 'scope': scope.label, 'data': scope.jsonId};
+  Map<String, Object> toLsif() => {
+        ...super.toLsif(),
+        'kind': _kind,
+        'scope': scope.label,
+        'data': scope.jsonId,
+      };
 
   String get _kind;
 }
