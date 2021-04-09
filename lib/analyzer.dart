@@ -57,7 +57,7 @@ class Analyzer {
 
   AnalysisContext context;
 
-  String get libPath =>   p.join(packageDir.path, 'lib');
+  String get libPath => p.join(packageDir.path, 'lib');
 
   Future<void> initialize() async {
     // This is split out into a separate method because constructors can't return a Future.
