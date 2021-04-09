@@ -93,5 +93,7 @@ class Document extends Scope {
     for (var reference in references) {
       reference.emit();
     }
+    // TODO: We may need to have a single referenceResult per declaration
+    // and collect them in the references item, but let's see if this works.
   }
 }

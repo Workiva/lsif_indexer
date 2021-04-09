@@ -63,6 +63,7 @@ abstract class Element {
 
   void emit() {
     // TODO: allow writing to a file
+    // TODO: Write in a more consistently useful order, e.g. ID first but then alphabetical?
     var alphabetical = SplayTreeMap<String, Object>()..addAll(toLsif());
     print(json.encode(alphabetical));
   }
@@ -162,8 +163,6 @@ class Item extends Edge {
         ...super.toLsif(),
         'outV': outV,
         'inVs': inVs,
-        'shard': document
-            .jsonId, // TODO: I think they just essentially renamed document to shard for edges
         if (property != null) 'property': property
       };
 }
@@ -225,4 +224,19 @@ class Contains extends Edge {
         ...container.references,
         ...container.declarations
       ].map((each) => each.range.jsonId).toList();
+}
+
+/// A comment, to make reading the file easier.
+class Comment extends Element {
+  String text;
+  Comment(this.text);
+
+  @override
+  String get label => '';
+
+  @override
+  String get type => 'comment';
+
+  @override
+  Map<String, Object> toLsif() => {...super.toLsif(), '-----Comment': text};
 }

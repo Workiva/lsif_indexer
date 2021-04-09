@@ -135,8 +135,6 @@ class LocalDeclaration extends Identifier implements AbstractDeclaration {
     ..outV = definitionResult.jsonId
     ..inVs = [range.jsonId];
 
-  Item _definitionsItem; //######
-
   Definition _definition;
   Definition get definition => _definition ??= Definition()
     ..outV = resultSet.jsonId
@@ -146,9 +144,13 @@ class LocalDeclaration extends Identifier implements AbstractDeclaration {
   ExportedDeclaration get export =>
       _export ??= ExportedDeclaration(location, this);
 
+  /// The name of the thing we're declaring, for convenience debugging.
+  String get _debugName => range.source.name;
+
   /// Write out the LSIF entities for this declaration.
   @override
   void emit() {
+    Comment('Writing LocalDeclaration of [$_debugName]').emit();
     // The actual source definition.
     resultSet.emit();
     range.emit();
@@ -166,6 +168,7 @@ class LocalDeclaration extends Identifier implements AbstractDeclaration {
     if (!name.startsWith('_')) {
       export.emit();
     }
+    Comment('Done localDeclaration of [$_debugName]').emit();
   }
 }
 
@@ -222,14 +225,16 @@ class LocalReference extends Identifier with Reference {
     ..from = declaration.resultSet.jsonId;
 
   Item get definitionsItem => Item(document, 'definitions')
-    ..to = [range.jsonId]
+    ..to = [declaration.range.jsonId]
     ..from = referenceResult.jsonId;
 
   @override
   void emit() {
+    Comment('Emitting LocalReference').emit();
     super.emit();
     next.emit();
     definitionsItem.emit();
+    Comment('Done LocalReference').emit();
   }
 }
 
@@ -249,6 +254,7 @@ mixin Reference {
 
   References get textDocReferences;
 
+  // TODO: It's possible that these should be combined for multiple references to the same thing.
   Item get referenceItem => Item(document, 'references')
     ..to = [range.jsonId]
     ..from = referenceResult.jsonId;

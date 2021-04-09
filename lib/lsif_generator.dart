@@ -34,7 +34,7 @@ import 'lsif_graph.dart';
 /// The actual understanding of the LSIF format is in the graph entities.
 void writeProject(String projectRoot, List<Document> documents) {
   Metadata(projectRoot).emit();
-  _within(Project(documents), _emitProject);
+  _within(Project(documents), _emitProjectContents);
 }
 
 /// Perform the operation [doThis] between the begin/end events of [scope].
@@ -46,8 +46,10 @@ void _within<T extends Scope>(T scope, void Function(T scope) doThis) {
   scope.contains?.emit();
 }
 
-void _emitProject(Project p) {
-  p.emit();
+/// Write out the contents of the project.
+///
+/// We expect the project itself to have been written from the _within operation.
+void _emitProjectContents(Project p) {
   for (var document in p.documents) {
     _within(document, _emitDocument);
   }
