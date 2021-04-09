@@ -10,7 +10,9 @@ environment:
 
 dependencies:
   analyzer: 0.41.1
+  args: ^1.6.0
   collection: ^1.14.13
+  meta: ^1.0.0
   path: ^1.7.0
   package_config: ^1.9.3
 

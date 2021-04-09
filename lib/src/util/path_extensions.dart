@@ -27,35 +27,28 @@
 // Copyright Anton Astashov. All rights reserved.
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
-import 'dart:io';
-import 'package:path/path.dart';
+import 'dart:collection';
 
-import 'package:lsif_indexer/analyzer.dart';
-import 'package:lsif_indexer/src/arguments.dart';
-import 'package:lsif_indexer/src/emitter.dart';
-import 'package:lsif_indexer/src/util/path_extensions.dart';
+import 'package:path/path.dart' as path;
 
-/// Generate LSIF information for the directory provided from the [arguments], or
-/// the current directory if not specified.
-///
-/// The format of the output is based on the [arugments].
-void main(List<String> arguments) async {
-  final config = LsifDartArgumentParser().parse(arguments);
+extension PathExtensions on String {
+  /// Normalizes [this], simplifying it by handling `..`, and `.`, and
+  /// removing redundant path separators whenever possible.
+  ///
+  /// Note that this is *not* guaranteed to return the same result for two
+  /// equivalent input paths. For that, see [path.canonicalize]. Or, if you're using
+  /// paths as map keys, pass [path.equals] and [path.hash] to [HashMap].
+  ///
+  ///     path/./to/..//file.text'.normalized; // -> 'path/file.txt'
+  ///
+  /// See [path.normalize()]
+  String get normalized => path.normalize(this);
 
-  // Exit early if the arguments were invalid
-  if (!config.isValid) return;
-
-  if (config.output != null) {
-    emitter = Emitter.fileOutput(config.output);
-  } else {
-    emitter = Emitter.standardOutput();
-  }
-
-  await emitter.use(() async {
-    await Analyzer(
-      packageRoot: config.projectRoot?.absolute?.normalized ??
-          Directory.current.absolute.path,
-      filesToAnalyze: config.rest.map(absolute).toList(),
-    ).analyzePackage();
-  });
+  /// Creates a new path by appending the given path parts to [path.current].
+  /// Equivalent to [path.join()] with [path.current] as the first argument. Example:
+  ///
+  ///     'path'.absolute; // -> '/your/current/dir/path'
+  ///
+  /// See [path.absolute()]
+  String get absolute => path.absolute(this);
 }
