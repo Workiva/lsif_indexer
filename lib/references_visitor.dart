@@ -106,12 +106,16 @@ class ReferencesVisitor extends GeneralizingAstVisitor<void> {
   }
 
   /// Create a [Reference] and [Declaration] for referenceNode and its definition.
-  void createReference({SimpleIdentifier referenceNode, Element staticElement}) {
+  void createReference({
+    SimpleIdentifier referenceNode,
+    Element staticElement,
+  }) {
     var declarationElement = declaringElement(staticElement);
     var declarationNode = declaringNode(declarationElement);
 
     /// Create a reference and the corresponding declaration if it doesn't already exist.
-    if (declarationNode is Declaration && !referenceNode.inDeclarationContext()) {
+    if (declarationNode is Declaration &&
+        !referenceNode.inDeclarationContext()) {
       var canonical;
       if (declarationElement.source.uri == document.packageUri) {
         declarationNode = narrow(declarationNode);
@@ -131,8 +135,8 @@ class ReferencesVisitor extends GeneralizingAstVisitor<void> {
       // Add the reference if the declaration is in this document.
       // TODO: Cross-document references!!
       if (canonical != null) {
-        var reference = lsif.Reference(document, staticElement.displayName, referenceNode.offset,
-            referenceNode.end, canonical);
+        var reference = lsif.Reference(document, staticElement.displayName,
+            referenceNode.offset, referenceNode.end, canonical);
         document.references.add(reference);
       }
     }

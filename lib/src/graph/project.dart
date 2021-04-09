@@ -27,7 +27,6 @@
 // Copyright Anton Astashov. All rights reserved.
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
-
 import 'package:lsif_indexer/lsif_graph.dart';
 
 class Project extends Scope {

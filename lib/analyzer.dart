@@ -63,8 +63,9 @@ class Analyzer {
     // This is split out into a separate method because constructors can't return a Future.
     // So the constructor calls this and sets a [ready] variable.
     packages = await findPackageConfig(packageDir);
-    var allPackageRoots =
-        packages.packages.map((each) => p.normalize(each.packageUriRoot.toFilePath())).toList();
+    var allPackageRoots = packages.packages
+        .map((each) => p.normalize(each.packageUriRoot.toFilePath()))
+        .toList();
     var collection = AnalysisContextCollection(includedPaths: allPackageRoots);
     context = collection.contextFor(libPath);
   }
@@ -73,7 +74,9 @@ class Analyzer {
   Future<void> analyzePackage() async {
     // TODO: Index files in non-lib directories
     await ready;
-    var files = context.contextRoot.analyzedFiles().where((each) => p.extension(each) == '.dart');
+    var files = context.contextRoot
+        .analyzedFiles()
+        .where((each) => p.extension(each) == '.dart');
     documents = await Future.wait(files.map(analyzeFile).toList());
     writeProject(packageDirAsUriString, documents);
   }

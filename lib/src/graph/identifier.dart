@@ -27,7 +27,6 @@
 // Copyright Anton Astashov. All rights reserved.
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
-
 import 'package:lsif_indexer/lsif_graph.dart';
 
 /// Graph entities that have a particular place in the source -
@@ -59,7 +58,8 @@ abstract class Identifier {
       other.end == end;
 
   @override
-  int get hashCode => document.hashCode ^ name.hashCode ^ offset.hashCode ^ end.hashCode;
+  int get hashCode =>
+      document.hashCode ^ name.hashCode ^ offset.hashCode ^ end.hashCode;
 
   /// The *one-based* line number containing this.
   int lineNumber;
@@ -90,8 +90,13 @@ abstract class Identifier {
 
 /// The declaration of anything - method, class, variable, getter, function, etc.
 class Declaration extends Identifier {
-  Declaration({Document document, String name, int offset, int end, String docString})
-      : super(document, name, offset, end) {
+  Declaration({
+    Document document,
+    String name,
+    int offset,
+    int end,
+    String docString,
+  }) : super(document, name, offset, end) {
     hoverText = docString == null ? sourceLineAsDoc : toMarkdown(docString);
     hoverResult = HoverResult(hoverText);
     hover = Hover(resultSet.jsonId, hoverResult.jsonId);
@@ -102,7 +107,9 @@ class Declaration extends Identifier {
 
   @override
   bool operator ==(Object other) {
-    return super == other && other is Declaration && other.hoverText == hoverText;
+    return super == other &&
+        other is Declaration &&
+        other.hoverText == hoverText;
   }
 
   @override
@@ -176,8 +183,13 @@ String toMarkdown(String docstring) {
 ///
 /// This only handles references within the same package (or maybe even just file?).
 class Reference extends Identifier {
-  Reference(Document document, String name, int offset, int end, this.declaration)
-      : super(document, name, offset, end) {
+  Reference(
+    Document document,
+    String name,
+    int offset,
+    int end,
+    this.declaration,
+  ) : super(document, name, offset, end) {
     next = Next(declaration.resultSet.jsonId, range.jsonId);
   }
 

@@ -27,7 +27,6 @@
 // Copyright Anton Astashov. All rights reserved.
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
-
 import 'package:collection/collection.dart';
 
 import 'lsif_graph.dart';
@@ -57,7 +56,8 @@ void _emitProject(Project p) {
 
 void _emitDocument(Document document) {
   // TODO: Organize this better.
-  var groupedReferences = groupBy(document.references, (Reference ref) => ref.declaration);
+  var groupedReferences =
+      groupBy(document.references, (Reference ref) => ref.declaration);
   for (var declaration in document.declarations) {
     declaration.emit();
     var references = groupedReferences[declaration];

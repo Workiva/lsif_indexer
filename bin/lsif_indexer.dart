@@ -36,6 +36,7 @@ import 'package:lsif_indexer/analyzer.dart';
 /// Currently prints to standard out.
 void main(List<String> arguments) async {
   // TODO: Allow specifying an output file.
-  await Analyzer(arguments.isEmpty ? Directory.current.absolute.path : arguments.first)
-      .analyzePackage();
+  await Analyzer(
+    arguments.isEmpty ? Directory.current.absolute.path : arguments.first,
+  ).analyzePackage();
 }
