@@ -104,7 +104,7 @@ class Range extends Vertex {
         'start': {'line': source.lineNumber, 'character': source.lineOffset},
         'end': {
           'line': source.endLineNumber,
-          'character': source.endLineOffset
+          'character': source.endLineOffset,
         },
         // Attributes that make it easier to read the emitted file but aren't used.
         '_debugName': source.name,
@@ -204,8 +204,11 @@ class Metadata extends Element {
         'toolInfo': toolInfo,
       };
 
-  Map<String, Object> get toolInfo =>
-      {'name': 'lsif_indexer', 'args': [], 'version': 'dev'};
+  Map<String, Object> get toolInfo => {
+        'name': 'lsif_indexer',
+        'args': [],
+        'version': 'dev',
+      };
 }
 
 class Contains extends Edge {
@@ -222,7 +225,7 @@ class Contains extends Edge {
 
   List<String> get incomingEdges => [
         ...container.references,
-        ...container.declarations
+        ...container.declarations,
       ].map((each) => each.range.jsonId).toList();
 }
 

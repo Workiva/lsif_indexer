@@ -40,7 +40,7 @@ abstract class Event extends Vertex {
         ...super.toLsif(),
         'kind': _kind,
         'scope': scope.label,
-        'data': scope.jsonId
+        'data': scope.jsonId,
       };
 
   String get _kind;

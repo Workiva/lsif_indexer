@@ -93,14 +93,14 @@ abstract class AbstractDeclaration {
 
 /// The declaration of anything - method, class, variable, getter, function, etc.
 class LocalDeclaration extends Identifier implements AbstractDeclaration {
-  LocalDeclaration(
-      {Document document,
-      String name,
-      int offset,
-      int end,
-      String docString,
-      this.location})
-      : super(document, name, offset, end) {
+  LocalDeclaration({
+    Document document,
+    String name,
+    int offset,
+    int end,
+    String docString,
+    this.location,
+  }) : super(document, name, offset, end) {
     hoverText = docString == null ? sourceLineAsDoc : toMarkdown(docString);
     hoverResult = HoverResult(hoverText);
     hover = Hover(resultSet.jsonId, hoverResult.jsonId);
@@ -211,8 +211,12 @@ String toMarkdown(String docstring) {
 /// This only handles references within the same package (or maybe even just file?).
 class LocalReference extends Identifier with Reference {
   LocalReference(
-      Document document, String name, int offset, int end, this.declaration)
-      : super(document, name, offset, end) {
+    Document document,
+    String name,
+    int offset,
+    int end,
+    this.declaration,
+  ) : super(document, name, offset, end) {
     next = Next(declaration.resultSet.jsonId, range.jsonId);
   }
 
