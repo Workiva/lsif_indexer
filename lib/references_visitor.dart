@@ -81,12 +81,18 @@ class AstReference {
   AstReference(this.document, this.node, this.element);
 
   void note() {
-    checkForLocalReference();
-    checkForExternalReference();
+    // Check if it's a declaration, not a reference.
+    // TODO: We are ignoring import prefixes right now - fix.
+    if (node.inDeclarationContext() && declaringElement is! PrefixElement) {
+      _declare(node);
+    } else {
+      checkForLocalReference();
+      checkForExternalReference();
+    }
   }
 
   void checkForLocalReference() {
-    if (declaringNode is! Declaration || node.inDeclarationContext()) {
+    if (declaringNode is! Declaration) {
       return;
     }
 
@@ -113,12 +119,16 @@ class AstReference {
 
   lsif.LocalDeclaration _findLocalDeclaration() {
     if (!_isLocal(declaringElement)) return null;
-    var node = narrow(declaringNode);
+    return _declare(declaringNode);
+  }
+
+  lsif.LocalDeclaration _declare(AstNode node) {
+    var narrowed = narrow(node);
     var declaration = lsif.LocalDeclaration(
         document: document,
         name: declaringElement.displayName,
-        offset: node.offset,
-        end: node.end,
+        offset: narrowed.offset,
+        end: narrowed.end,
         docString: declaringElement.documentationComment,
         location: declaringElement.location.encoding);
 
@@ -161,7 +171,10 @@ class AstReference {
     // so use the whole thing. Use a try/catch to avoid explicitly listing all the different
     // possibilities.
     try {
-      return declarationNode.name;
+      var name = declarationNode.name;
+      if (name is AstNode) {
+        return name;
+      }
     } on NoSuchMethodError {} // ignore
     return declarationNode;
   }

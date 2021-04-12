@@ -150,7 +150,7 @@ class LocalDeclaration extends Identifier implements AbstractDeclaration {
   /// Write out the LSIF entities for this declaration.
   @override
   void emit() {
-    Comment('Writing LocalDeclaration of [$_debugName]').emit();
+    Comment('Emitting LocalDeclaration of [$_debugName]').emit();
     // The actual source definition.
     resultSet.emit();
     range.emit();
@@ -234,11 +234,11 @@ class LocalReference extends Identifier with Reference {
 
   @override
   void emit() {
-    Comment('Emitting LocalReference').emit();
+    Comment('Emitting LocalReference to [$name]').emit();
     super.emit();
     next.emit();
     definitionsItem.emit();
-    Comment('Done LocalReference').emit();
+    Comment('Done LocalReference to [$name]').emit();
   }
 }
 
