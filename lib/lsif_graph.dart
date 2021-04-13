@@ -261,4 +261,8 @@ class Comment extends Element {
 
   @override
   Map<String, Object> toLsif() => {...super.toLsif(), '-----Comment': text};
+
+  // Commented out so we won't confuse sourcegraph with unknown node types.
+  @override
+  void emit() {}
 }
