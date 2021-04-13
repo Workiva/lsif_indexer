@@ -29,6 +29,8 @@
 
 import 'package:lsif_indexer/lsif_graph.dart';
 
+import 'utilities.dart';
+
 /// Graph entities that have a particular place in the source -
 /// currently [Reference]s and [LocalDeclaration]s.
 abstract class Identifier {
@@ -267,13 +269,24 @@ mixin Reference {
 class ExternalReference extends Identifier with Reference {
   ExternalReference(
       Document document, String name, int offset, int end, this.declaration)
-      : super(document, name, offset, end);
+      : moniker = ImportMoniker(declaration.identifier),
+        super(document, name, offset, end);
 
   ImportedDeclaration declaration;
 
+  ImportMoniker moniker;
+
   @override
   void emit() {
+    Comment('Emitting imported reference to [$name]').emit();
     super.emit();
+    moniker.emit();
+    MonikerEdge(moniker.jsonId, range.jsonId).emit();
+    PackageInformationEdge(
+            moniker.jsonId, declaration.packageInformation.jsonId)
+        .emit();
+    Hover(declaration.hoverResult.jsonId, range.jsonId).emit();
+    Comment('Done imported reference to [$name]').emit();
   }
 
   // This is extremely weird. An external reference seems to point from the reference range
@@ -312,18 +325,36 @@ abstract class Moniker extends Vertex {
 
 /// A reference to an external declaration.
 ///
-/// This corresponds to a moniker import in the graph.
-class ImportedDeclaration extends Moniker implements AbstractDeclaration {
-  @override
-  String get label => 'moniker';
+/// This doesn't really emit anything in the graph, except that the
+/// packageInformation is used from the reference.
+class ImportedDeclaration extends AbstractDeclaration {
+  ImportedDeclaration(
+      this.identifier, this.library, String hover, Document document) {
+    packageInformation =
+        document.externalPackages.addIfAbsent(PackageInformation(library));
+    hoverResult = HoverResult(toMarkdown(hover ?? 'no hover text available'));
+  }
+
+  HoverResult hoverResult;
 
   @override
-  String get kind => 'import';
+  bool operator ==(Object other) =>
+      other is ImportedDeclaration && other.identifier == identifier;
+
   String library;
-  List<String> qualifiers;
-  ImportedDeclaration(String identifier) : super(identifier);
 
-  var resultSet = ResultSet();
+  PackageInformation packageInformation;
+
+  /// This is only used to distinguish declarations
+  String identifier;
+
+  /// We emit nothing, we just act as a placeholder.
+  @override
+  void emit() {
+    Comment('Emitting imported declaration').emit();
+    hoverResult.emit();
+    Comment('Done emitting imported declaration').emit();
+  }
 }
 
 /// An exported declaration - corresponds to an export moniker.
@@ -344,10 +375,28 @@ class ExportedDeclaration extends Moniker {
 
   @override
   void emit() {
+    Comment('Emitting export for [${declaration.name}]').emit();
     super.emit();
     packageInformationEdge.emit();
     monikerEdge.emit();
+    Comment('Done export for [${declaration.name}]').emit();
   }
+}
+
+/// A reference to an external declaration.
+///
+/// This corresponds to a moniker import in the graph.
+class ImportMoniker extends Moniker implements AbstractDeclaration {
+  @override
+  String get label => 'moniker';
+
+  @override
+  String get kind => 'import';
+  String library;
+  List<String> qualifiers;
+  ImportMoniker(String identifier) : super(identifier);
+
+  var resultSet = ResultSet();
 }
 
 class PackageInformationEdge extends Edge {

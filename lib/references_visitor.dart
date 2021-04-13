@@ -189,7 +189,26 @@ class AstReference {
     if (_isLocal(element) || _isSdk(element)) {
       return null;
     }
-    var declaration = lsif.ImportedDeclaration(element.location.encoding);
+    var hover =
+        element.documentationComment ?? element.getExtendedDisplayName(null);
+    var declaration = lsif.ImportedDeclaration(element.location.encoding,
+        element.location.components.first, hover, document);
     return document.externalDeclarations.addIfAbsent(declaration);
   }
 }
+
+// ##### So for an imported declaration we write nothing, except that there's a packageinformation
+// for each package that gets imported. In go they map that to the import statement, but we're nOutOfMemoryErrormapping tHideCombinator
+// and I'm not even sure that works in Dart with re-exports where we'd like to refer to the real source
+// Hmm, but what about hoverResult.??? Should we have one of those per imported decl?
+
+// Therefor, we just collect up all the libraries from all the declarations and write those.abstract
+// At a reference, we write
+// range
+// referenceresult
+// textDoc/Referencesitem
+// hover
+//
+// Then moniker, packageinformation edge and moniker edge.
+//
+//### Adding an extra call to Info seems like it only adds one net line to the LSIF

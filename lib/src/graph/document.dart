@@ -48,6 +48,7 @@ class Document extends Scope {
   List<LocalReference> references = [];
   Set<ImportedDeclaration> externalDeclarations = {};
   List<ExternalReference> externalReferences = [];
+  Set<PackageInformation> externalPackages = {};
 
   /// Add [declaration] to our list of local declarations, and
   /// return it or the already-present version if there was one.
@@ -86,6 +87,12 @@ class Document extends Scope {
       externals.putIfAbsent(declaration, () => []);
     }
     groupedReferences.forEach(emitDeclarationWithReferences);
+    Comment('Emitting external package information').emit();
+    for (var package in externalPackages) {
+      package.emit();
+    }
+    Comment('Done emitting external package information').emit();
+    externals.forEach(emitDeclarationWithReferences);
   }
 
   void emitDeclarationWithReferences(

@@ -30,7 +30,7 @@
 import 'package:lsif_indexer/lsif_graph.dart';
 
 /// Contains the project and packageInformation nodes.
-/// 
+///
 /// In Dart (I think) a project corresponds to a Dart package, so we should have
 /// exactly one packageInformation that we emit at the start, and it applies to
 /// all documents.
@@ -55,7 +55,7 @@ class Project extends Scope {
   @override
   void emit() {
     super.emit();
-    packageInformation.emit();
+    // packageInformation.emit();
   }
 }
 
@@ -66,12 +66,18 @@ class PackageInformation extends Vertex {
   String url;
 
   @override
+  bool operator ==(Object x) => x is PackageInformation && x.url == url;
+
+  @override
+  int get hashCode => url.hashCode;
+
+  @override
   String get label => 'packageInformation';
   @override
   Map<String, Object> toLsif() => {
         ...super.toLsif(),
         'name': url,
-        'manager': 'something',
-        'version': 'v0.0.1'
+        'manager': 'pub',
+        'version': 'v0.0.1',
       };
 }
