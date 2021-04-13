@@ -66,7 +66,10 @@ class Document extends Scope {
   }
 
   @override
-  Contains get contains => Contains(this);
+  DocumentContains get contains => DocumentContains(this);
+
+  List<String> get definitionIds =>
+      [for (var each in declarations) each.definition.jsonId];
 
   @override
   Map<String, Object> toLsif() => {
@@ -75,7 +78,7 @@ class Document extends Scope {
         'languageId': 'dart',
       };
 
-  void emitReferenceStuff() {
+  void emitReferencesAndDeclarations() {
     var groupedReferences =
         groupBy(references, (LocalReference ref) => ref.declaration);
     var externals =

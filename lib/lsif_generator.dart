@@ -42,8 +42,8 @@ void _within<T extends Scope>(T scope, void Function(T scope) doThis) {
   scope.emit();
   BeginEvent(scope).emit();
   doThis(scope);
-  EndEvent(scope).emit();
   scope.contains?.emit();
+  EndEvent(scope).emit();
 }
 
 /// Write out the contents of the project.
@@ -55,6 +55,9 @@ void _emitProjectContents(Project p) {
   }
 }
 
+// TODO: There are some additional definitions/references results produced by go
+// at the end that seem to be related to artifical references to the otherwise unreferenced
+// main and import statement. Do we need something corresponding?
 void _emitDocument(Document document) {
-  document.emitReferenceStuff();
+  document.emitReferencesAndDeclarations();
 }

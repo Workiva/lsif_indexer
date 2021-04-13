@@ -46,6 +46,9 @@ class Project extends Scope {
   }
 
   @override
+  Edge get contains => ProjectContains(this);
+
+  @override
   Map<String, Object> toLsif() => {...super.toLsif(), 'kind': 'dart'};
 
   PackageInformation _packageInformation;
@@ -55,7 +58,7 @@ class Project extends Scope {
   @override
   void emit() {
     super.emit();
-    // packageInformation.emit();
+    packageInformation.emit();
   }
 }
 

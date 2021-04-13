@@ -34,6 +34,7 @@ import 'dart:convert';
 
 import 'src/graph/document.dart';
 import 'src/graph/identifier.dart';
+import 'src/graph/project.dart';
 
 export 'src/graph/document.dart';
 export 'src/graph/event.dart';
@@ -89,7 +90,8 @@ abstract class Edge extends Element {
 
 /// An element that contains other elements, i.e. a Project or a Document right now.
 abstract class Scope extends Vertex {
-  Contains contains;
+  /// We expect this to be either a ProjectContains or a DocumentContains.
+  Edge get contains;
 }
 
 /// A text range in the source code.
@@ -211,11 +213,11 @@ class Metadata extends Element {
       };
 }
 
-class Contains extends Edge {
+class DocumentContains extends Edge {
   @override
   String get label => 'contains';
 
-  Contains(this.container);
+  DocumentContains(this.container);
 
   Document container;
 
@@ -224,9 +226,26 @@ class Contains extends Edge {
       {...super.toLsif(), 'outV': container.jsonId, 'inVs': incomingEdges};
 
   List<String> get incomingEdges => [
-        ...container.references,
-        ...container.declarations,
-      ].map((each) => each.range.jsonId).toList();
+        for (var ref in container.references) ref.range.jsonId,
+        for (var declaration in container.declarations)
+          declaration.range.jsonId,
+      ];
+}
+
+class ProjectContains extends Edge {
+  @override
+  String get label => 'contains';
+
+  ProjectContains(this.project);
+
+  Project project;
+
+  @override
+  Map<String, Object> toLsif() =>
+      {...super.toLsif(), 'outV': project.jsonId, 'inVs': incomingEdges};
+
+  List<String> get incomingEdges =>
+      project.documents.map((each) => each.jsonId).toList();
 }
 
 /// A comment, to make reading the file easier.
