@@ -12,7 +12,7 @@ $ pub global activate -sgit https://github.com/Workiva/lsif_indexer
 
 Run the indexer on a package:
 ```bash
-$ pub global run lsif_indexer -o output.dump
+$ pub global run lsif_indexer -o dump.lsif
 ```
 
 Optionally provide:
