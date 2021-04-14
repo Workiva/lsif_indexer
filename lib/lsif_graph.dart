@@ -267,4 +267,7 @@ class Comment extends Element {
 
   @override
   Map<String, Object> toLsif() => {...super.toLsif(), '-----Comment': text};
+
+  @override
+  void emit() {}
 }
