@@ -66,6 +66,14 @@ class Document extends Scope {
     return _contentLines[lineNumber];
   }
 
+  bool get isNotEmpty => !isEmpty;
+
+  bool get isEmpty =>
+      declarations.isEmpty &&
+      references.isEmpty &&
+      externalDeclarations.isEmpty &&
+      externalReferences.isEmpty;
+
   @override
   DocumentContains get contains => DocumentContains(this);
 

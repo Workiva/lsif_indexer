@@ -50,7 +50,7 @@ void _within<T extends Scope>(T scope, void Function(T scope) doThis) {
 ///
 /// We expect the project itself to have been written from the _within operation.
 void _emitProjectContents(Project p) {
-  for (var document in p.documents) {
+  for (var document in p.nonEmptyDocuments) {
     _within(document, _emitDocument);
   }
 }

@@ -251,7 +251,7 @@ class ProjectContains extends Edge {
       {...super.toLsif(), 'outV': project.jsonId, 'inVs': incomingEdges};
 
   List<String> get incomingEdges =>
-      project.documents.map((each) => each.jsonId).toList();
+      project.nonEmptyDocuments.map((each) => each.jsonId).toList();
 }
 
 /// A comment, to make reading the file easier.

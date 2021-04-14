@@ -45,6 +45,13 @@ class Project extends Scope {
     }
   }
 
+  // The validator doesn't like documents that contain nothing, so skip
+  // libraries that are empty (most often those that are just re-exports)
+  List<Document> get nonEmptyDocuments => [
+        for (var d in documents)
+          if (d.isNotEmpty) d
+      ];
+
   @override
   Edge get contains => ProjectContains(this);
 
@@ -52,8 +59,14 @@ class Project extends Scope {
   Map<String, Object> toLsif() => {...super.toLsif(), 'kind': 'dart'};
 
   PackageInformation _packageInformation;
-  PackageInformation get packageInformation => _packageInformation ??=
-      PackageInformation('${documents.first.packageUri}');
+  PackageInformation get packageInformation {
+    if (_packageInformation != null) {
+      return _packageInformation;
+    }
+    var packageName = Uri.parse(documents.first.packageUri.pathSegments.first);
+    _packageInformation = PackageInformation('package:$packageName');
+    return _packageInformation;
+  }
 
   @override
   void emit() {
@@ -81,6 +94,6 @@ class PackageInformation extends Vertex {
         ...super.toLsif(),
         'name': url,
         'manager': 'pub',
-        'version': 'v0.0.1',
+        'version': '',
       };
 }

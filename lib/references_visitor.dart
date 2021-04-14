@@ -180,6 +180,7 @@ class AstReference {
   }
 
   /// Is this element part of the current library.
+  // TODO: Is this correct? Are references in other libraries in this package treated as non-local?
   bool _isLocal(Element element) => element.source.uri == document.packageUri;
 
   /// Does this element come from the Dart SDK.
@@ -191,8 +192,11 @@ class AstReference {
     }
     var hover =
         element.documentationComment ?? element.getExtendedDisplayName(null);
-    var declaration = lsif.ImportedDeclaration(element.location.encoding,
-        element.location.components.first, hover, document);
+    // TODO: Is the assumption that the package follows this form correct? It won't be for
+    // SDK references or special Dart URI schemes for non-lib references.
+    var packageName = Uri.parse(element.library.identifier).pathSegments.first;
+    var declaration = lsif.ImportedDeclaration(
+        element.location.encoding, 'package:$packageName', hover, document);
     return document.externalDeclarations.addIfAbsent(declaration);
   }
 }

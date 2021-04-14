@@ -329,9 +329,9 @@ abstract class Moniker extends Vertex {
 /// packageInformation is used from the reference.
 class ImportedDeclaration extends AbstractDeclaration {
   ImportedDeclaration(
-      this.identifier, this.library, String hover, Document document) {
+      this.identifier, this.packageUri, String hover, Document document) {
     packageInformation =
-        document.externalPackages.addIfAbsent(PackageInformation(library));
+        document.externalPackages.addIfAbsent(PackageInformation(packageUri));
     hoverResult = HoverResult(toMarkdown(hover ?? 'no hover text available'));
   }
 
@@ -341,7 +341,7 @@ class ImportedDeclaration extends AbstractDeclaration {
   bool operator ==(Object other) =>
       other is ImportedDeclaration && other.identifier == identifier;
 
-  String library;
+  String packageUri;
 
   PackageInformation packageInformation;
 
