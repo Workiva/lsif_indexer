@@ -165,7 +165,8 @@ class Item extends Edge {
         ...super.toLsif(),
         'outV': outV,
         'inVs': inVs,
-        if (property != null) 'property': property
+        if (property != null) 'property': property,
+        if (document != null) 'document': document.jsonId
       };
 }
 
@@ -195,7 +196,7 @@ class Metadata extends Element {
 
   String projectRoot;
 
-  Metadata(this.projectRoot) : super(id: 'meta');
+  Metadata(this.projectRoot);
 
   @override
   Map<String, Object> toLsif() => {
@@ -225,11 +226,16 @@ class DocumentContains extends Edge {
   Map<String, Object> toLsif() =>
       {...super.toLsif(), 'outV': container.jsonId, 'inVs': incomingEdges};
 
-  List<String> get incomingEdges => [
+  // TODO: Tidy this up, and the semantics of when things are added to declarations. See
+  // emitReferencesAndDeclarations in Document, where we push things into the references
+  // from declarations, but not vice versa.
+  List<String> get incomingEdges => {
         for (var ref in container.references) ref.range.jsonId,
+        for (var ref in container.externalReferences) ref.range.jsonId,
         for (var declaration in container.declarations)
           declaration.range.jsonId,
-      ];
+        for (var ref in container.references) ref.declaration.range.jsonId,
+      }.toList();
 }
 
 class ProjectContains extends Edge {
@@ -257,12 +263,8 @@ class Comment extends Element {
   String get label => '';
 
   @override
-  String get type => 'comment';
+  String get type => '';
 
   @override
   Map<String, Object> toLsif() => {...super.toLsif(), '-----Comment': text};
-
-  // Commented out so we won't confuse sourcegraph with unknown node types.
-  @override
-  void emit() {}
 }

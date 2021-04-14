@@ -49,6 +49,7 @@ class Document extends Scope {
   Set<ImportedDeclaration> externalDeclarations = {};
   List<ExternalReference> externalReferences = [];
   Set<PackageInformation> externalPackages = {};
+  // TODO: ### Make sure all the things we're putting in sets actually define ==/hash.
 
   /// Add [declaration] to our list of local declarations, and
   /// return it or the already-present version if there was one.
@@ -83,6 +84,8 @@ class Document extends Scope {
         groupBy(references, (LocalReference ref) => ref.declaration);
     var externals =
         groupBy(externalReferences, (ExternalReference ref) => ref.declaration);
+    // Make sure unreferenced declarations are included.
+    // TODO: Tidy this up. We also may not have referenced things in declarations.
     for (var declaration in declarations) {
       groupedReferences.putIfAbsent(declaration, () => []);
     }

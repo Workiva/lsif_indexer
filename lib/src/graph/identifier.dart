@@ -105,7 +105,7 @@ class LocalDeclaration extends Identifier implements AbstractDeclaration {
   }) : super(document, name, offset, end) {
     hoverText = docString == null ? sourceLineAsDoc : toMarkdown(docString);
     hoverResult = HoverResult(hoverText);
-    hover = Hover(resultSet.jsonId, hoverResult.jsonId);
+    hover = Hover(hoverResult.jsonId, resultSet.jsonId);
   }
 
   /// The location in terms of the ElementLocation.encoding.
