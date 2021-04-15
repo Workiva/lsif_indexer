@@ -38,24 +38,24 @@ import 'package:lsif_indexer/src/util/path_extensions.dart';
 /// Generate LSIF information for the directory provided from the [arguments], or
 /// the current directory if not specified.
 ///
-/// The format of the output is based on the [arugments].
+/// The destination of the output is based on the [arguments].
 void main(List<String> arguments) async {
-  final config = LsifDartArgumentParser().parse(arguments);
+  final config = ArgumentParser().parse(arguments);
 
   // Exit early if the arguments were invalid
   if (!config.isValid) return;
 
-  if (config.output != null) {
-    emitter = Emitter.fileOutput(config.output);
-  } else {
-    emitter = Emitter.standardOutput();
-  }
+  emitter = config.output == null
+      ? Emitter.standardOutput()
+      : Emitter.fileOutput(config.output);
 
-  await emitter.use(() async {
+  Future<void> _analyze() async {
     await Analyzer(
       packageRoot: config.projectRoot?.absolute?.normalized ??
           Directory.current.absolute.path,
       filesToAnalyze: config.rest.map(absolute).toList(),
     ).analyzePackage();
-  });
+  }
+
+  await emitter.use(_analyze);
 }

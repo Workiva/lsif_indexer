@@ -31,9 +31,9 @@ import 'package:args/args.dart';
 import 'package:meta/meta.dart';
 
 /// The resulting config of parsing arguments for the lsif_indexer program.
-class LsifDartConfig {
+class ArgumentConfig {
   /// All arguments that are either options (eg. -o file.ext) or flags (eg. -h).
-  final Map<String, dynamic> options;
+  final Map<String, Object> options;
 
   /// All arguments provided after [options].
   final List<String> rest;
@@ -41,7 +41,7 @@ class LsifDartConfig {
   /// If the command line arguments are valid.
   final bool isValid;
 
-  const LsifDartConfig(this.options, this.rest, {this.isValid = true});
+  const ArgumentConfig(this.options, this.rest, {this.isValid = true});
 
   /// The provided output destination to store the LSIF results in. Can be `null`.
   String get output => _valueForItem(Config.output);
@@ -52,30 +52,26 @@ class LsifDartConfig {
   String _valueForItem(_ConfigItem item) => options[item.name];
 }
 
-class LsifDartArgumentParser {
+class ArgumentParser {
   final ArgParser _argParser;
 
-  LsifDartArgumentParser() : _argParser = ArgParser() {
+  ArgumentParser() : _argParser = ArgParser() {
     _argParser.addItems(Config.all);
   }
 
-  LsifDartConfig parse(List<String> arguments) {
+  ArgumentConfig parse(List<String> arguments) {
     final argResult = _argParser.parse(arguments);
 
     if (argResult['help'] == true) {
       _showHelp();
-      return LsifDartConfig({}, [], isValid: false);
+      return ArgumentConfig({}, [], isValid: false);
     }
 
-    final options = argResult.options.fold(
-      <String, dynamic>{},
-      (accumulator, option) {
-        accumulator[option] = argResult[option];
-        return accumulator;
-      },
-    );
+    final options = <String, Object>{
+      for (final option in argResult.options) option: argResult[option]
+    };
 
-    return LsifDartConfig(options, argResult.rest);
+    return ArgumentConfig(options, argResult.rest);
   }
 
   void _showHelp([String errorMessage]) {
@@ -84,8 +80,9 @@ class LsifDartArgumentParser {
     );
     print(
       'lsif_indexer.dart analyzes all the files of the given project, '
-      'and stores the analyze information in the specified file.',
+      'and stores the analysis information in the specified file in the LSIF format.',
     );
+    print('See https://lsif.dev/ for more information on the LSIF format.\n');
 
     if (errorMessage != null) {
       print('$errorMessage\n');

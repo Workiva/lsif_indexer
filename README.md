@@ -1,6 +1,6 @@
 # lsif_indexer
 
-An LSIF indexer for Dart source code. Uses some mechanisms from package:lsif-dart, but
+An [LSIF] indexer for Dart source code. Uses some mechanisms from package:lsif-dart, but
 rewritten from scratch and significantly simpler.
 
 ## Quick Start
@@ -20,3 +20,5 @@ Optionally provide:
 | --- | --- | --- | --- |
 | `output` | `o` | Specify the output file | Terminal standard output |
 | `root` | `r` | Specify the root of the project you are indexing | Current directory |
+
+[LSIF]:https://lsif.dev/
