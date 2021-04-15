@@ -27,8 +27,8 @@
 // Copyright Anton Astashov. All rights reserved.
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 
 /// Compare two LSIF files as graphs.
 ///

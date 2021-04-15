@@ -28,6 +28,7 @@
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
 import 'dart:io';
+
 import 'package:lsif_indexer/analyzer.dart';
 
 /// Generate LSIF information for the directory listed in the first [argument], or

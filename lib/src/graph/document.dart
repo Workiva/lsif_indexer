@@ -27,8 +27,8 @@
 // Copyright Anton Astashov. All rights reserved.
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
-import 'package:lsif_indexer/lsif_graph.dart';
 import 'package:analyzer/src/generated/source.dart' show LineInfo;
+import 'package:lsif_indexer/lsif_graph.dart';
 
 /// The document entity in the LSIF graph.
 class Document extends Scope {

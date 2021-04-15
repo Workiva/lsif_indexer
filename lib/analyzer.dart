@@ -29,13 +29,13 @@
 
 import 'dart:io';
 
-import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/analysis/analysis_context.dart';
+import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
+import 'package:lsif_indexer/lsif_generator.dart';
+import 'package:lsif_indexer/lsif_graph.dart' as lsif;
+import 'package:lsif_indexer/references_visitor.dart';
 import 'package:package_config/package_config.dart';
 import 'package:path/path.dart' as p;
-import 'package:lsif_indexer/lsif_graph.dart' as lsif;
-import 'package:lsif_indexer/lsif_generator.dart';
-import 'package:lsif_indexer/references_visitor.dart';
 
 /// Analysis results for a package.
 class Analyzer {
