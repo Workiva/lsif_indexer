@@ -28,6 +28,7 @@
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
 import 'package:lsif_indexer/lsif_graph.dart';
+import 'package:meta/meta.dart';
 
 import 'utilities.dart';
 
@@ -102,10 +103,10 @@ class LocalDeclaration extends Identifier implements AbstractDeclaration {
     int offset,
     int end,
     String docString,
+    String declaration,
     this.location,
   }) : super(document, name, offset, end) {
-    hoverText = docString == null ? sourceLineAsDoc : toMarkdown(docString);
-    hoverResult = HoverResult(hoverText);
+    hoverResult = HoverResult(docString: docString, declaration: declaration);
     hover = Hover(hoverResult.jsonId, resultSet.jsonId);
   }
 
@@ -115,10 +116,6 @@ class LocalDeclaration extends Identifier implements AbstractDeclaration {
   /// seems to be of the form '<package:url>;<package:url>;identifier'. I don't know why
   /// the package is repeated - there may be cases where there are two different URLs there?
   String location;
-
-  /// If there isn't a doc comment, we just use the source line converted loosely to markdown.
-  // TODO: Don't use markdown, it appears Sourcegraph doesn't actually support it.
-  String get sourceLineAsDoc => '```dart\n${document.line(lineNumber)}\n```';
 
   @override
   bool operator ==(Object other) {
@@ -183,16 +180,37 @@ class LocalDeclaration extends Identifier implements AbstractDeclaration {
 class HoverResult extends Vertex {
   @override
   String get label => 'hoverResult';
-  String hoverText;
-  HoverResult(this.hoverText);
 
+  /// The documentation string for the element associated to this hover. Can often be `null`.
+  final String docString;
+
+  /// The package for the element associated to this hover. Eg. package:lsif_indexer, dart:core
+  /// Can be `null` (eg. for [LocalDeclaration])
+  final String package;
+
+  /// The declaration for the element associated to this hover.
+  final String declaration;
+
+  HoverResult({@required this.declaration, this.docString, this.package});
+
+  /// Represents the hover result in the following format:
+  /// packageName (eg. `package:lsif_indexer` or `dart:core`)
+  /// -------------------------
+  /// declaration (eg. `final String delclaration`)
+  /// -------------------------
+  /// docString (eg. `/// The declaration for the element associated to this hover.`)
   @override
-  Map<String, Object> toLsif() => {
-        ...super.toLsif(),
-        'result': {
-          'contents': {'kind': 'markdown', 'value': hoverText}
-        }
-      };
+  Map<String, Object> toLsif() {
+    return {
+      ...super.toLsif(),
+      'result': {
+        'contents': [package, declaration, docString]
+            .whereNotNull()
+            .map((text) => {'language': 'dart', 'value': text})
+            .toList(),
+      },
+    };
+  }
 }
 
 class Hover extends Edge {
@@ -203,15 +221,6 @@ class Hover extends Edge {
   Hover(this.inV, this.outV);
   @override
   Map<String, Object> toLsif() => {...super.toLsif(), 'inV': inV, 'outV': outV};
-}
-
-String toMarkdown(String docstring) {
-  return docstring
-      .replaceAll(RegExp(r'^/\*\*\n', multiLine: true), '')
-      .replaceAll(RegExp(r'^/\*\* ', multiLine: true), '')
-      .replaceAll(RegExp(r'^ \*$', multiLine: true), '')
-      .replaceAll(RegExp(r'^ \* ', multiLine: true), '')
-      .replaceAll(RegExp(r'\*/$', multiLine: true), '');
 }
 
 /// A reference to a declaration.
@@ -335,10 +344,19 @@ abstract class Moniker extends Vertex {
 /// A declaration in another package.
 class ImportedDeclaration extends AbstractDeclaration {
   ImportedDeclaration(
-      this.identifier, this.packageUri, String hover, Document document) {
+    this.identifier,
+    this.packageUri,
+    String hover,
+    Document document,
+    String declaration,
+  ) {
     packageInformation =
         document.externalPackages.addIfAbsent(PackageInformation(packageUri));
-    hoverResult = HoverResult(toMarkdown(hover ?? 'no hover text available'));
+    hoverResult = HoverResult(
+      docString: hover,
+      declaration: declaration,
+      package: packageUri,
+    );
   }
 
   HoverResult hoverResult;
