@@ -116,7 +116,7 @@ class ReferencesVisitor extends GeneralizingAstVisitor<void> {
     /// Create a reference and the corresponding declaration if it doesn't already exist.
     if (declarationNode is Declaration &&
         !referenceNode.inDeclarationContext()) {
-      var canonical;
+      lsif.Declaration canonical;
       if (declarationElement.source.uri == document.packageUri) {
         declarationNode = narrow(declarationNode);
         var declaration = lsif.Declaration(
