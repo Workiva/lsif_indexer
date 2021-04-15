@@ -263,11 +263,8 @@ class Comment extends Element {
   String get label => '';
 
   @override
-  String get type => '';
+  String get type => 'vertex';
 
   @override
   Map<String, Object> toLsif() => {...super.toLsif(), '-----Comment': text};
-
-  @override
-  void emit() {}
 }
