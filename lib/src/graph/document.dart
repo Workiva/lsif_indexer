@@ -49,7 +49,6 @@ class Document extends Scope {
   Set<ImportedDeclaration> externalDeclarations = {};
   List<ExternalReference> externalReferences = [];
   Set<PackageInformation> externalPackages = {};
-  // TODO: ### Make sure all the things we're putting in sets actually define ==/hash.
 
   /// Add [declaration] to our list of local declarations, and
   /// return it or the already-present version if there was one.

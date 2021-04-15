@@ -180,7 +180,8 @@ class AstReference {
   }
 
   /// Is this element part of the current library.
-  // TODO: Is this correct? Are references in other libraries in this package treated as non-local?
+  // TODO: I don't think this is right. We are treating references from other libraries
+  // in the same package as cross-package references. I think it works, but we should probably avoid.
   bool _isLocal(Element element) => element.source.uri == document.packageUri;
 
   /// Does this element come from the Dart SDK.

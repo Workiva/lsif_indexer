@@ -341,6 +341,9 @@ class ImportedDeclaration extends AbstractDeclaration {
   bool operator ==(Object other) =>
       other is ImportedDeclaration && other.identifier == identifier;
 
+  @override
+  int get hashCode => identifier.hashCode;
+
   String packageUri;
 
   PackageInformation packageInformation;
