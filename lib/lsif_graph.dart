@@ -114,7 +114,7 @@ class Range extends Vertex {
       };
 }
 
-// TODO: Write comments for more these entities - prerequisite is understanding what they are.
+/// ######
 class ResultSet extends Vertex {
   @override
   String get label => 'resultSet';
@@ -149,15 +149,20 @@ class Item extends Edge {
   String outV;
   List<String> inVs;
 
+  /// Where the edge is coming from - equivalent, but much easier to read than outV.
+  // TODO: Make these uniformly available.
+  // TODO: Consider pushing inV/outV up to edge, but some of them have inVs/outVs, so
+  // how do we allow for that?
   set from(String origin) => outV = origin;
   String get from => outV;
 
+  /// Where the edge is coming from - equivalent, but much easier to read than inVs.
   set to(List<String> destinations) => inVs = destinations;
   List<String> get to => inVs;
   Document document;
 
-  // Seems to be some kind of edge label. The only current usage is to distinguish
-  //references/definitions.
+  // An edge label, the only current usage is to distinguish
+  // references/definitions.
   String property;
 
   @override
