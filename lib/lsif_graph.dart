@@ -36,10 +36,10 @@ import 'src/emitter.dart';
 import 'src/graph/document.dart';
 import 'src/graph/identifier.dart';
 
-export 'src/graph/project.dart';
 export 'src/graph/document.dart';
-export 'src/graph/identifier.dart';
 export 'src/graph/event.dart';
+export 'src/graph/identifier.dart';
+export 'src/graph/project.dart';
 
 /// An element in the graph model, either a vertex or an edge.
 abstract class Element {

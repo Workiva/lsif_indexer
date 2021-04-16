@@ -27,10 +27,9 @@
 // Copyright Anton Astashov. All rights reserved.
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
-import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/ast/ast.dart';
+import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/element/element.dart';
-
 import 'package:lsif_indexer/lsif_graph.dart' as lsif;
 
 /// Visits the AST and constructs an [lsif.Document] with the [Reference]s and [Declaration]s found.

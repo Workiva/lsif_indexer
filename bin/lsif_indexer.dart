@@ -28,12 +28,12 @@
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
 import 'dart:io';
-import 'package:path/path.dart';
 
 import 'package:lsif_indexer/analyzer.dart';
 import 'package:lsif_indexer/src/arguments.dart';
 import 'package:lsif_indexer/src/emitter.dart';
 import 'package:lsif_indexer/src/util/path_extensions.dart';
+import 'package:path/path.dart';
 
 /// Generate LSIF information for the directory provided from the [arguments], or
 /// the current directory if not specified.
