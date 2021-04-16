@@ -32,6 +32,7 @@
 import 'dart:collection';
 import 'dart:convert';
 
+import 'src/emitter.dart';
 import 'src/graph/document.dart';
 import 'src/graph/identifier.dart';
 import 'src/graph/project.dart';
@@ -63,10 +64,9 @@ abstract class Element {
   Map<String, Object> toLsif() => {'id': jsonId, 'type': type, 'label': label};
 
   void emit() {
-    // TODO: allow writing to a file
     // TODO: Write in a more consistently useful order, e.g. ID first but then alphabetical?
-    var alphabetical = SplayTreeMap<String, Object>()..addAll(toLsif());
-    print(json.encode(alphabetical));
+    final alphabetical = SplayTreeMap<String, Object>()..addAll(toLsif());
+    emitter.emit(json.encode(alphabetical));
   }
 
   @override

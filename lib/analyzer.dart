@@ -35,14 +35,20 @@ import 'package:analyzer/dart/analysis/results.dart';
 import 'package:lsif_indexer/lsif_generator.dart';
 import 'package:lsif_indexer/lsif_graph.dart' as lsif;
 import 'package:lsif_indexer/references_visitor.dart';
+import 'package:meta/meta.dart';
 import 'package:package_config/package_config.dart';
 import 'package:path/path.dart' as p;
 
 /// Analysis results for a package.
 class Analyzer {
-  Analyzer(this.packageRoot) {
+  Analyzer({
+    @required this.packageRoot,
+    List<String> filesToAnalyze = const [],
+  }) : _filesToAnalyze = filesToAnalyze {
     ready = initialize();
   }
+
+  final List<String> _filesToAnalyze;
 
   String packageRoot;
   Directory _packageDir;
@@ -54,7 +60,7 @@ class Analyzer {
 
   List<lsif.Document> documents;
 
-  PackageConfig packages;
+  PackageConfig packageConfig;
 
   AnalysisContext context;
 
@@ -65,9 +71,9 @@ class Analyzer {
   Future<void> initialize() async {
     // This is split out into a separate method because constructors can't return a Future.
     // So the constructor calls this and sets a [ready] variable.
-    packages = await findPackageConfig(packageDir);
-    var allPackageRoots = packages.packages
-        .map((each) => p.normalize(each.packageUriRoot.toFilePath()))
+    packageConfig = await findPackageConfig(packageDir);
+    var allPackageRoots = packageConfig.packages
+        .map((package) => p.normalize(package.packageUriRoot.toFilePath()))
         .toList();
     var collection = AnalysisContextCollection(includedPaths: allPackageRoots);
     context = collection.contextFor(libPath);
@@ -81,6 +87,9 @@ class Analyzer {
         .analyzedFiles()
         .where((each) => p.extension(each) == '.dart');
 
+    if (_filesToAnalyze.isNotEmpty) {
+      files = files.where(_filesToAnalyze.contains);
+    }
     await Future.wait(files
         .map((f) async => await context.currentSession.getResolvedUnit(f)));
     documents = await Future.wait(files.map(analyzeFile).toList());
@@ -94,7 +103,7 @@ class Analyzer {
     var document = lsif.Document(
         content: resolved.content,
         uri: fileUri,
-        packageUri: packages.toPackageUri(fileUri),
+        packageUri: packageConfig.toPackageUri(fileUri),
         lineInfo: resolved.lineInfo);
     var visitor = ReferencesVisitor(document);
     resolved.unit.accept(visitor);
