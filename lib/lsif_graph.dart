@@ -35,11 +35,14 @@ import 'dart:convert';
 import 'src/emitter.dart';
 import 'src/graph/document.dart';
 import 'src/graph/identifier.dart';
+import 'src/graph/project.dart';
 
 export 'src/graph/document.dart';
 export 'src/graph/event.dart';
 export 'src/graph/identifier.dart';
 export 'src/graph/project.dart';
+
+// TODO: Break these huge files up. One per class? Or something a little coarser?
 
 /// An element in the graph model, either a vertex or an edge.
 abstract class Element {
@@ -63,6 +66,7 @@ abstract class Element {
   Map<String, Object> toLsif() => {'id': jsonId, 'type': type, 'label': label};
 
   void emit() {
+    // TODO: Write in a more consistently useful order, e.g. ID first but then alphabetical?
     final alphabetical = SplayTreeMap<String, Object>()..addAll(toLsif());
     emitter.emit(json.encode(alphabetical));
   }
@@ -88,7 +92,9 @@ abstract class Edge extends Element {
 
 /// An element that contains other elements, i.e. a Project or a Document right now.
 abstract class Scope extends Vertex {
-  Contains contains;
+  /// We expect this to be either a ProjectContains or a DocumentContains.
+  // TODO: Consider an abstract class for these.
+  Edge get contains;
 }
 
 /// A text range in the source code.
@@ -111,7 +117,9 @@ class Range extends Vertex {
       };
 }
 
-// TODO: Write comments for more these entities - prerequisite is understanding what they are.
+/// Rather than connecting a [Range] directly to the various types of entities
+/// it's related to (e.g. reference, definition, hover), we link ranges to single a
+/// [ResultSet] that is then connected to the other entities.
 class ResultSet extends Vertex {
   @override
   String get label => 'resultSet';
@@ -127,6 +135,7 @@ class ReferenceResult extends Vertex {
   String get label => 'referenceResult';
 }
 
+// TODO: Document what this is for.
 class Next extends Edge {
   @override
   String get label => 'next';
@@ -145,10 +154,21 @@ class Item extends Edge {
   Item(this.document, [this.property]) : super();
   String outV;
   List<String> inVs;
+
+  /// Where the edge is coming from - equivalent, but much easier to read than outV.
+  // TODO: Make these uniformly available.
+  // TODO: Consider pushing inV/outV up to edge, but some of them have inVs/outVs, so
+  // how do we allow for that?
+  set from(String origin) => outV = origin;
+  String get from => outV;
+
+  /// Where the edge is coming from - equivalent, but much easier to read than inVs.
+  set to(List<String> destinations) => inVs = destinations;
+  List<String> get to => inVs;
   Document document;
 
-  // Seems to be some kind of edge label. The only current usage is to distinguish
-  //references/definitions.
+  // An edge label, the only current usage is to distinguish
+  // references/definitions.
   String property;
 
   @override
@@ -156,8 +176,8 @@ class Item extends Edge {
         ...super.toLsif(),
         'outV': outV,
         'inVs': inVs,
-        'document': document.jsonId,
-        if (property != null) 'property': property
+        if (property != null) 'property': property,
+        if (document != null) 'document': document.jsonId
       };
 }
 
@@ -173,12 +193,13 @@ class Definition extends Edge {
 class References extends Edge {
   @override
   String get label => 'textDocument/references';
-  String outV;
-  String inV;
+  String from;
+  String to;
   @override
-  Map<String, Object> toLsif() => {...super.toLsif(), 'outV': outV, 'inV': inV};
+  Map<String, Object> toLsif() => {...super.toLsif(), 'outV': from, 'inV': to};
 }
 
+/// Describes the metadata for the whole project.
 class Metadata extends Element {
   @override
   String get type => 'vertex';
@@ -187,29 +208,30 @@ class Metadata extends Element {
 
   String projectRoot;
 
-  Metadata(this.projectRoot) : super(id: 'meta');
+  Metadata(this.projectRoot);
 
   @override
   Map<String, Object> toLsif() => {
         ...super.toLsif(),
         'projectRoot': projectRoot,
-        'version': '0.5.0',
+        'version': '0.4.3',
         'positionEncoding': 'utf-16',
         'toolInfo': toolInfo,
       };
 
   Map<String, Object> get toolInfo => {
-        'name': 'simple_lsif',
+        'name': 'lsif_indexer',
         'args': [],
         'version': 'dev',
       };
 }
 
-class Contains extends Edge {
+/// A "contains" edge specifically for a [Document], which contains references and declarations.
+class DocumentContains extends Edge {
   @override
   String get label => 'contains';
 
-  Contains(this.container);
+  DocumentContains(this.container);
 
   Document container;
 
@@ -217,8 +239,49 @@ class Contains extends Edge {
   Map<String, Object> toLsif() =>
       {...super.toLsif(), 'outV': container.jsonId, 'inVs': incomingEdges};
 
-  List<String> get incomingEdges => [
-        ...container.references,
-        ...container.declarations,
-      ].map((each) => each.range.jsonId).toList();
+  // TODO: Tidy this up, and the semantics of when things are added to declarations. See
+  // emitReferencesAndDeclarations in Document, where we push things into the references
+  // from declarations, but not vice versa.
+  List<String> get incomingEdges => {
+        for (var ref in container.references) ref.range.jsonId,
+        for (var ref in container.externalReferences) ref.range.jsonId,
+        for (var declaration in container.declarations)
+          declaration.range.jsonId,
+        for (var ref in container.references) ref.declaration.range.jsonId,
+      }.toList();
+}
+
+/// A "contains" edge specifically for a [Project], which contains [Document]s
+class ProjectContains extends Edge {
+  @override
+  String get label => 'contains';
+
+  ProjectContains(this.project);
+
+  Project project;
+
+  @override
+  Map<String, Object> toLsif() =>
+      {...super.toLsif(), 'outV': project.jsonId, 'inVs': incomingEdges};
+
+  List<String> get incomingEdges =>
+      project.nonEmptyDocuments.map((each) => each.jsonId).toList();
+}
+
+/// A comment, to make reading the file easier.
+///
+/// This is ignored by Sourcegraph. Note that lsif-validate will complain
+/// about these as unreachable, but that can be ignored.
+class Comment extends Element {
+  String text;
+  Comment(this.text);
+
+  @override
+  String get label => '';
+
+  @override
+  String get type => 'vertex';
+
+  @override
+  Map<String, Object> toLsif() => {...super.toLsif(), '-----Comment': text};
 }

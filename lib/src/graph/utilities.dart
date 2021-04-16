@@ -27,39 +27,16 @@
 // Copyright Anton Astashov. All rights reserved.
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
-import 'lsif_graph.dart';
-
-/// Write out a project based at [projectRoot] containing [documents].
-///
-/// The actual understanding of the LSIF format is in the graph entities.
-void writeProject(String projectRoot, List<Document> documents) {
-  Metadata(projectRoot).emit();
-  _within(Project(documents), _emitProjectContents);
-}
-
-/// Perform the operation [doThis] between the begin/end events of [scope].
-void _within<T extends Scope>(T scope, void Function(T scope) doThis) {
-  scope.emit();
-  BeginEvent(scope).emit();
-  doThis(scope);
-  // I'm not sure if the contains should be before or after the endEvent. It seems to work
-  // either way, and the go emitter doesn't even have the events.
-  scope.contains?.emit();
-  EndEvent(scope).emit();
-}
-
-/// Write out the contents of the project.
-///
-/// We expect the project itself to have been written from the _within operation.
-void _emitProjectContents(Project p) {
-  for (var document in p.nonEmptyDocuments) {
-    _within(document, _emitDocument);
+extension SetUtilities<T> on Set<T> {
+  /// Add [element] if we don't already have an equal
+  /// member, and return either [element] or the existing member.
+  T addIfAbsent(T element) {
+    var existing = lookup(element);
+    if (existing == null) {
+      add(element);
+      return element;
+    } else {
+      return existing;
+    }
   }
-}
-
-// TODO: There are some additional definitions/references results produced by go
-// at the end that seem to be related to artifical references to the otherwise unreferenced
-// main and import statement. Do we need something corresponding?
-void _emitDocument(Document document) {
-  document.emitReferencesAndDeclarations();
 }

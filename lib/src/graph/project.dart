@@ -29,13 +29,73 @@
 
 import 'package:lsif_indexer/lsif_graph.dart';
 
+/// Contains the project and packageInformation nodes.
+///
+/// In Dart (I think) a project corresponds to a Dart package, so we should have
+/// exactly one packageInformation that we emit at the start, and it applies to
+/// all documents.
 class Project extends Scope {
   @override
   String get label => 'project';
   List<Document> documents;
 
-  Project(this.documents);
+  Project(this.documents) {
+    for (var doc in documents) {
+      doc.project = this;
+    }
+  }
+
+  // The validator doesn't like documents that contain nothing, so skip
+  // libraries that are empty (most often those that are just re-exports)
+  List<Document> get nonEmptyDocuments => [
+        for (var d in documents)
+          if (d.isNotEmpty) d
+      ];
+
+  @override
+  Edge get contains => ProjectContains(this);
 
   @override
   Map<String, Object> toLsif() => {...super.toLsif(), 'kind': 'dart'};
+
+  PackageInformation _packageInformation;
+  PackageInformation get packageInformation {
+    if (_packageInformation != null) {
+      return _packageInformation;
+    }
+    var packageName = Uri.parse(documents.first.packageUri.pathSegments.first);
+    _packageInformation = PackageInformation('package:$packageName');
+    return _packageInformation;
+  }
+
+  @override
+  void emit() {
+    super.emit();
+    packageInformation.emit();
+  }
+}
+
+/// A 'packageInformation' vertex in LSIF, representing either the current package or the package
+/// that holds an external declaration we are referencing.
+class PackageInformation extends Vertex {
+  PackageInformation(this.url);
+
+  /// The URL for the package.
+  String url;
+
+  @override
+  bool operator ==(Object x) => x is PackageInformation && x.url == url;
+
+  @override
+  int get hashCode => url.hashCode;
+
+  @override
+  String get label => 'packageInformation';
+  @override
+  Map<String, Object> toLsif() => {
+        ...super.toLsif(),
+        'name': url,
+        'manager': 'pub',
+        'version': '',
+      };
 }
