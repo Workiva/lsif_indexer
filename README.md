@@ -21,4 +21,12 @@ Optionally provide:
 | `output` | `o` | Specify the output file | Terminal standard output |
 | `root` | `r` | Specify the root of the project you are indexing | Current directory |
 
+## Resources
+ - The LSP/LSIF [specification] - not as specific as it might be.
+ - A Sourcegraph document on [writing an indexer] has some explanations.
+
 [LSIF]:https://lsif.dev/
+[specification]:https://microsoft.github.io/language-server-protocol/specifications/lsif/0.4.0/specification/
+[writing an indexer]:https://docs.sourcegraph.com/code_intelligence/explanations/writing_an_indexer
+
+

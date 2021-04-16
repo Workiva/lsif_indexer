@@ -90,6 +90,8 @@ class Analyzer {
     if (_filesToAnalyze.isNotEmpty) {
       files = files.where(_filesToAnalyze.contains);
     }
+    // Make sure all the files are analyzed before we generate anything. Not sure why this
+    // seemed to be needed, but it at least shouldn't cause any problems.
     await Future.wait(files
         .map((f) async => await context.currentSession.getResolvedUnit(f)));
     documents = await Future.wait(files.map(analyzeFile).toList());

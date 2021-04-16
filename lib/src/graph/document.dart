@@ -86,6 +86,10 @@ class Document extends Scope {
         'languageId': 'dart',
       };
 
+  /// Collect up the declarations, either ones we declare or ones we have references to
+  /// and emit them, declarations first.
+  ///
+  /// For external references also make sure we're writing the package information for them.
   void emitReferencesAndDeclarations() {
     var groupedReferences =
         groupBy(references, (LocalReference ref) => ref.declaration);
@@ -108,6 +112,8 @@ class Document extends Scope {
     externals.forEach(emitDeclarationWithReferences);
   }
 
+  /// Write out a [declaration] and all of the [references] to it, works for
+  /// either local or external declarations.
   void emitDeclarationWithReferences(
       AbstractDeclaration declaration, List<Reference> references) {
     declaration.emit();

@@ -89,6 +89,7 @@ abstract class Identifier {
       '{$runtimeType($name) at ${range.source.lineNumber}:${range.source.lineOffset}';
 }
 
+/// An abstract class for both local and imported declarations.
 abstract class AbstractDeclaration {
   void emit();
 }
@@ -109,9 +110,14 @@ class LocalDeclaration extends Identifier implements AbstractDeclaration {
   }
 
   /// The location in terms of the ElementLocation.encoding.
+  ///
+  /// The encoding is a String the analyzer gives us that should uniformly identify a reference. It
+  /// seems to be of the form '<package:url>;<package:url>;identifier'. I don't know why
+  /// the package is repeated - there may be cases where there are two different URLs there?
   String location;
 
   /// If there isn't a doc comment, we just use the source line converted loosely to markdown.
+  // TODO: Don't use markdown, it appears Sourcegraph doesn't actually support it.
   String get sourceLineAsDoc => '```dart\n${document.line(lineNumber)}\n```';
 
   @override
@@ -244,6 +250,8 @@ class LocalReference extends Identifier with Reference {
   }
 }
 
+/// An abstract class for both imported and local references, made a mixin
+/// so that they can also inherit from [Identifier].
 mixin Reference {
   void emit() {
     range.emit();
@@ -266,6 +274,7 @@ mixin Reference {
     ..from = referenceResult.jsonId;
 }
 
+/// A reference to a declaration in a different package, via an import moniker.
 class ExternalReference extends Identifier with Reference {
   ExternalReference(
       Document document, String name, int offset, int end, this.declaration)
@@ -323,10 +332,7 @@ abstract class Moniker extends Vertex {
   Moniker(this.identifier);
 }
 
-/// A reference to an external declaration.
-///
-/// This doesn't really emit anything in the graph, except that the
-/// packageInformation is used from the reference.
+/// A declaration in another package.
 class ImportedDeclaration extends AbstractDeclaration {
   ImportedDeclaration(
       this.identifier, this.packageUri, String hover, Document document) {
@@ -402,6 +408,8 @@ class ImportMoniker extends Moniker implements AbstractDeclaration {
   var resultSet = ResultSet();
 }
 
+/// LSIF has both vertices and edges named 'packageInformation', this is the
+/// edge version, connecting the vertex to a moniker.
 class PackageInformationEdge extends Edge {
   @override
   String get label => 'packageInformation';
@@ -415,6 +423,8 @@ class PackageInformationEdge extends Edge {
       {...super.toLsif(), 'outV': moniker, 'inV': packageInformation};
 }
 
+/// LSIF has both vertices and edges named 'moniker', this is the
+/// edge version, connecting a moniker to a range.
 class MonikerEdge extends Edge {
   @override
   String get label => 'moniker';

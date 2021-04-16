@@ -42,6 +42,8 @@ void _within<T extends Scope>(T scope, void Function(T scope) doThis) {
   scope.emit();
   BeginEvent(scope).emit();
   doThis(scope);
+  // I'm not sure if the contains should be before or after the endEvent. It seems to work
+  // either way, and the go emitter doesn't even have the events.
   scope.contains?.emit();
   EndEvent(scope).emit();
 }

@@ -42,6 +42,8 @@ export 'src/graph/event.dart';
 export 'src/graph/identifier.dart';
 export 'src/graph/project.dart';
 
+// TODO: Break these huge files up. One per class? Or something a little coarser?
+
 /// An element in the graph model, either a vertex or an edge.
 abstract class Element {
   // The id can be either a string or a number. If nothing is provided we auto-allocate numbers.
@@ -114,7 +116,9 @@ class Range extends Vertex {
       };
 }
 
-/// ######
+/// Rather than connecting a [Range] directly to the various types of entities
+/// it's related to (e.g. reference, definition, hover), we link ranges to single a
+/// [ResultSet] that is then connected to the other entities.
 class ResultSet extends Vertex {
   @override
   String get label => 'resultSet';
@@ -130,6 +134,7 @@ class ReferenceResult extends Vertex {
   String get label => 'referenceResult';
 }
 
+// TODO: Document what this is for.
 class Next extends Edge {
   @override
   String get label => 'next';
@@ -193,6 +198,7 @@ class References extends Edge {
   Map<String, Object> toLsif() => {...super.toLsif(), 'outV': from, 'inV': to};
 }
 
+/// Describes the metadata for the whole project.
 class Metadata extends Element {
   @override
   String get type => 'vertex';
@@ -219,6 +225,7 @@ class Metadata extends Element {
       };
 }
 
+/// A "contains" edge specifically for a [Document], which contains references and declarations.
 class DocumentContains extends Edge {
   @override
   String get label => 'contains';
@@ -243,6 +250,7 @@ class DocumentContains extends Edge {
       }.toList();
 }
 
+/// A "contains" edge specifically for a [Project], which contains [Document]s
 class ProjectContains extends Edge {
   @override
   String get label => 'contains';
@@ -260,6 +268,9 @@ class ProjectContains extends Edge {
 }
 
 /// A comment, to make reading the file easier.
+///
+/// This is ignored by Sourcegraph. Note that lsif-validate will complain
+/// about these as unreachable, but that can be ignored.
 class Comment extends Element {
   String text;
   Comment(this.text);

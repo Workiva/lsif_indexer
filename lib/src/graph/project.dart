@@ -75,6 +75,8 @@ class Project extends Scope {
   }
 }
 
+/// A 'packageInformation' vertex in LSIF, representing either the current package or the package
+/// that holds an external declaration we are referencing.
 class PackageInformation extends Vertex {
   PackageInformation(this.url);
 
