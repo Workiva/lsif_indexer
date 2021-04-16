@@ -31,7 +31,6 @@ import 'dart:io';
 
 import 'package:analyzer/dart/analysis/analysis_context.dart';
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
-import 'package:analyzer/dart/analysis/results.dart';
 import 'package:lsif_indexer/lsif_generator.dart';
 import 'package:lsif_indexer/lsif_graph.dart' as lsif;
 import 'package:lsif_indexer/references_visitor.dart';
@@ -66,8 +65,6 @@ class Analyzer {
 
   String get libPath => p.join(packageDir.path, 'lib');
 
-  Map<String, ResolvedUnitResult> resolved = {};
-
   Future<void> initialize() async {
     // This is split out into a separate method because constructors can't return a Future.
     // So the constructor calls this and sets a [ready] variable.
@@ -92,8 +89,7 @@ class Analyzer {
     }
     // Make sure all the files are analyzed before we generate anything. Not sure why this
     // seemed to be needed, but it at least shouldn't cause any problems.
-    await Future.wait(files
-        .map((f) async => await context.currentSession.getResolvedUnit(f)));
+    await Future.wait(files.map(context.currentSession.getResolvedUnit));
     documents = await Future.wait(files.map(analyzeFile).toList());
     writeProject(packageDirAsUriString, documents);
   }

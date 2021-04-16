@@ -93,6 +93,7 @@ abstract class Edge extends Element {
 /// An element that contains other elements, i.e. a Project or a Document right now.
 abstract class Scope extends Vertex {
   /// We expect this to be either a ProjectContains or a DocumentContains.
+  // TODO: Consider an abstract class for these.
   Edge get contains;
 }
 

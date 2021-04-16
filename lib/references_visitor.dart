@@ -104,11 +104,11 @@ class AstReference {
   }
 
   void checkForExternalReference() {
-    var external = externalDeclarationFor(declaringElement);
-    if (external != null) {
-      document.addExternal(external);
+    var declaration = externalDeclarationFor(declaringElement);
+    if (declaration != null) {
+      document.addExternal(declaration);
       var reference = lsif.ExternalReference(
-          document, element.displayName, node.offset, node.end, external);
+          document, element.displayName, node.offset, node.end, declaration);
       document.externalReferences.add(reference);
     }
   }
