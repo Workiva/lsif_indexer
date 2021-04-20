@@ -2,8 +2,6 @@ name: lsif_indexer
 description: Generate an LSIF index (used by e.g. Sourcegraph) from Dart source files
 version: 0.1.0
 homepage: https://github.com/Workiva/lsif_indexer
-authors:
- - Alan Knight <alan.knight@workiva.com>
 
 environment:
   sdk: '>=2.7.0 <3.0.0'
