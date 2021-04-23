@@ -118,7 +118,8 @@ class AstReference {
       _localDeclaration ??= _findLocalDeclaration();
 
   lsif.LocalDeclaration _findLocalDeclaration() {
-    if (!_isLocal(declaringElement)) return null;
+    if (!declaringElement.isLocaTo(document)) return null;
+
     return _declare(declaringNode);
   }
 
@@ -179,25 +180,22 @@ class AstReference {
     return declarationNode;
   }
 
-  /// Is this element part of the current library.
-  // TODO: I don't think this is right. We are treating references from other libraries
-  // in the same package as cross-package references. I think it works, but we should probably avoid.
-  bool _isLocal(Element element) => element.source.uri == document.packageUri;
-
-  /// Does this element come from the Dart SDK.
-  bool _isSdk(Element element) => element.library.identifier.startsWith('dart');
-
   lsif.ImportedDeclaration externalDeclarationFor(Element element) {
-    if (_isLocal(element) || _isSdk(element)) {
-      return null;
-    }
+    final packagePrefix = element.isSdk ? 'dart' : 'package';
+
+    final packageName =
+        Uri.parse(element.library.identifier).pathSegments.first;
+
     var hover =
         element.documentationComment ?? element.getExtendedDisplayName(null);
     // TODO: Is the assumption that the package follows this form correct? It won't be for
     // SDK references or special Dart URI schemes for non-lib references.
-    var packageName = Uri.parse(element.library.identifier).pathSegments.first;
     var declaration = lsif.ImportedDeclaration(
-        element.location.encoding, 'package:$packageName', hover, document);
+      element.location.encoding,
+      '$packagePrefix:$packageName',
+      hover,
+      document,
+    );
     return document.externalDeclarations.addIfAbsent(declaration);
   }
 }
