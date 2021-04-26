@@ -27,9 +27,6 @@
 // Copyright Anton Astashov. All rights reserved.
 // Licensed under the BSD-2 Clause License: https://github.com/astashov/crossdart/blob/master/LICENSE
 
-import 'package:analyzer/dart/element/element.dart';
-import 'package:lsif_indexer/lsif_graph.dart' as lsif;
-
 extension SetUtilities<T> on Set<T> {
   /// Add [element] if we don't already have an equal
   /// member, and return either [element] or the existing member.
@@ -42,14 +39,4 @@ extension SetUtilities<T> on Set<T> {
       return existing;
     }
   }
-}
-
-extension ElementSource on Element {
-  /// Is this element part of the current library.
-  // TODO: I don't think this is right. We are treating references from other libraries
-  // in the same package as cross-package references. I think it works, but we should probably avoid.
-  bool isLocaTo(lsif.Document document) => source.uri == document.packageUri;
-
-  /// Does this element come from the Dart SDK.
-  bool get isSdk => library.identifier.startsWith('dart');
 }
