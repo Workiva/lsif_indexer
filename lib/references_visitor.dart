@@ -66,8 +66,16 @@ class ReferencesVisitor extends GeneralizingAstVisitor<void> {
     if (node.parent is CompoundAssignmentExpression) {
       // Shouldn't the type be inferred here, so the cast wouldn't be required??
       var assignmentNode = node.parent as CompoundAssignmentExpression;
+
       return assignmentNode.readElement ?? assignmentNode.writeElement;
     }
+
+    if (node.parent.parent is AssignmentExpression) {
+      final assignment = node.parent.parent as AssignmentExpression;
+
+      return assignment.readElement ?? assignment.writeElement;
+    }
+
     return null;
   }
 }
