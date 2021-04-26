@@ -201,13 +201,15 @@ class HoverResult extends Vertex {
   /// docString (eg. `/// The declaration for the element associated to this hover.`)
   @override
   Map<String, Object> toLsif() {
+    final hoverTexts = [package, declaration, docString];
+
     return {
       ...super.toLsif(),
       'result': {
-        'contents': [package, declaration, docString]
-            .whereNotNull()
-            .map((text) => {'language': 'dart', 'value': text})
-            .toList(),
+        'contents': [
+          for (final text in hoverTexts)
+            if (text != null) {'language': 'dart', 'value': text}
+        ],
       },
     };
   }

@@ -40,13 +40,3 @@ extension SetUtilities<T> on Set<T> {
     }
   }
 }
-
-extension IterableUtilities<T> on Iterable<T> {
-  /// Returns a lazy [Iterable] containing all elements that are not `null`.
-  ///
-  /// Example:
-  /// ```Dart
-  /// [0, null, 1].whereNotNull(); // => (0, 1)
-  /// ```
-  Iterable<T> whereNotNull() => where((element) => element != null);
-}
