@@ -127,6 +127,7 @@ class AstReference {
 
   lsif.LocalDeclaration _findLocalDeclaration() {
     if (!_isLocal(declaringElement)) return null;
+
     return _declare(declaringNode);
   }
 
@@ -196,16 +197,21 @@ class AstReference {
   bool _isSdk(Element element) => element.library.identifier.startsWith('dart');
 
   lsif.ImportedDeclaration externalDeclarationFor(Element element) {
-    if (_isLocal(element) || _isSdk(element)) {
-      return null;
-    }
+    final packagePrefix = _isSdk(element) ? 'dart' : 'package';
+
+    final packageName =
+        Uri.parse(element.library.identifier).pathSegments.first;
+
     var hover =
         element.documentationComment ?? element.getExtendedDisplayName(null);
     // TODO: Is the assumption that the package follows this form correct? It won't be for
     // SDK references or special Dart URI schemes for non-lib references.
-    var packageName = Uri.parse(element.library.identifier).pathSegments.first;
     var declaration = lsif.ImportedDeclaration(
-        element.location.encoding, 'package:$packageName', hover, document);
+      element.location.encoding,
+      '$packagePrefix:$packageName',
+      hover,
+      document,
+    );
     return document.externalDeclarations.addIfAbsent(declaration);
   }
 }
