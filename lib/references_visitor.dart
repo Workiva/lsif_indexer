@@ -66,8 +66,16 @@ class ReferencesVisitor extends GeneralizingAstVisitor<void> {
     if (node.parent is CompoundAssignmentExpression) {
       // Shouldn't the type be inferred here, so the cast wouldn't be required??
       var assignmentNode = node.parent as CompoundAssignmentExpression;
+
       return assignmentNode.readElement ?? assignmentNode.writeElement;
     }
+
+    if (node.parent.parent is AssignmentExpression) {
+      final assignment = node.parent.parent as AssignmentExpression;
+
+      return assignment.readElement ?? assignment.writeElement;
+    }
+
     return null;
   }
 }
@@ -119,6 +127,7 @@ class AstReference {
 
   lsif.LocalDeclaration _findLocalDeclaration() {
     if (!_isLocal(declaringElement)) return null;
+
     return _declare(declaringNode);
   }
 
@@ -191,16 +200,16 @@ class AstReference {
   bool _isSdk(Element element) => element.library.identifier.startsWith('dart');
 
   lsif.ImportedDeclaration externalDeclarationFor(Element element) {
-    if (_isLocal(element) || _isSdk(element)) {
-      return null;
-    }
+    final packagePrefix = _isSdk(element) ? 'dart' : 'package';
+
+    final packageName =
+        Uri.parse(element.library.identifier).pathSegments.first;
 
     // TODO: Is the assumption that the package follows this form correct? It won't be for
     // SDK references or special Dart URI schemes for non-lib references.
-    var packageName = Uri.parse(element.library.identifier).pathSegments.first;
     var declaration = lsif.ImportedDeclaration(
       element.location.encoding,
-      'package:$packageName',
+      '$packagePrefix:$packageName',
       element.documentationComment,
       document,
       element.getDisplayString(withNullability: false),
