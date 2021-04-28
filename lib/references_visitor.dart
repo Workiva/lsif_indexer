@@ -133,13 +133,16 @@ class AstReference {
 
   lsif.LocalDeclaration _declare(AstNode node) {
     var narrowed = narrow(node);
+
     var declaration = lsif.LocalDeclaration(
-        document: document,
-        name: declaringElement.displayName,
-        offset: narrowed.offset,
-        end: narrowed.end,
-        docString: declaringElement.documentationComment,
-        location: declaringElement.location.encoding);
+      document: document,
+      name: declaringElement.displayName,
+      offset: narrowed.offset,
+      end: narrowed.end,
+      docString: declaringElement.documentationComment,
+      location: declaringElement.location.encoding,
+      declaration: declaringElement.getDisplayString(withNullability: false),
+    );
 
     return document.addDeclaration(declaration);
   }
@@ -202,16 +205,16 @@ class AstReference {
     final packageName =
         Uri.parse(element.library.identifier).pathSegments.first;
 
-    var hover =
-        element.documentationComment ?? element.getExtendedDisplayName(null);
     // TODO: Is the assumption that the package follows this form correct? It won't be for
     // SDK references or special Dart URI schemes for non-lib references.
     var declaration = lsif.ImportedDeclaration(
       element.location.encoding,
       '$packagePrefix:$packageName',
-      hover,
+      element.documentationComment,
       document,
+      element.getDisplayString(withNullability: false),
     );
+
     return document.externalDeclarations.addIfAbsent(declaration);
   }
 }
