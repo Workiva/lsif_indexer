@@ -37,9 +37,10 @@ import 'package:lsif_indexer/lsif_graph.dart';
 class Project extends Scope {
   @override
   String get label => 'project';
+  String packageVersion;
   List<Document> documents;
 
-  Project(this.documents) {
+  Project(this.documents, this.packageVersion) {
     for (var doc in documents) {
       doc.project = this;
     }
@@ -47,10 +48,8 @@ class Project extends Scope {
 
   // The validator doesn't like documents that contain nothing, so skip
   // libraries that are empty (most often those that are just re-exports)
-  List<Document> get nonEmptyDocuments => [
-        for (var d in documents)
-          if (d.isNotEmpty) d
-      ];
+  List<Document> get nonEmptyDocuments =>
+      [for (var d in documents) if (d.isNotEmpty) d];
 
   @override
   Edge get contains => ProjectContains(this);
@@ -64,7 +63,8 @@ class Project extends Scope {
       return _packageInformation;
     }
     var packageName = Uri.parse(documents.first.packageUri.pathSegments.first);
-    _packageInformation = PackageInformation('package:$packageName');
+    _packageInformation =
+        PackageInformation('package:$packageName', packageVersion ?? '');
     return _packageInformation;
   }
 
@@ -78,10 +78,12 @@ class Project extends Scope {
 /// A 'packageInformation' vertex in LSIF, representing either the current package or the package
 /// that holds an external declaration we are referencing.
 class PackageInformation extends Vertex {
-  PackageInformation(this.url);
+  PackageInformation(this.url, this.packageVersion);
 
   /// The URL for the package.
   String url;
+
+  String packageVersion;
 
   @override
   bool operator ==(Object x) => x is PackageInformation && x.url == url;
@@ -96,6 +98,6 @@ class PackageInformation extends Vertex {
         ...super.toLsif(),
         'name': url,
         'manager': 'pub',
-        'version': '',
+        'version': packageVersion ?? '',
       };
 }

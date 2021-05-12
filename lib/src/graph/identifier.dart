@@ -352,8 +352,9 @@ class ImportedDeclaration extends AbstractDeclaration {
     Document document,
     String declaration,
   ) {
-    packageInformation =
-        document.externalPackages.addIfAbsent(PackageInformation(packageUri));
+    // TODO: Provide version information for the packages we're referring to.
+    packageInformation = document.externalPackages
+        .addIfAbsent(PackageInformation(packageUri, ''));
     hoverResult = HoverResult(
       docString: hover,
       declaration: declaration,

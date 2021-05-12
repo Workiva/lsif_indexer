@@ -187,7 +187,10 @@ class AstReference {
       if (name is AstNode) {
         return name;
       }
-    } on NoSuchMethodError {} // ignore
+    } on NoSuchMethodError {
+      // ignore
+      null;
+    }
     return declarationNode;
   }
 

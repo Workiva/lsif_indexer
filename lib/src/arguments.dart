@@ -49,6 +49,8 @@ class ArgumentConfig {
   /// The provided project root for analysis. Can be `null`.
   String get projectRoot => _valueForItem(Config.projectRoot);
 
+  String get version => _valueForItem(Config.version);
+
   String _valueForItem(_ConfigItem item) => options[item.name];
 }
 
@@ -164,9 +166,13 @@ class Config {
     help: 'The project root input\n(defaults to the current directory)',
     abbreviation: 'r',
   );
-
+  static const version = _ConfigOption(
+    name: 'version',
+    help: 'The package version',
+    abbreviation: 'v',
+  );
   static List<_ConfigItem> get all {
-    return [help, output, projectRoot]
+    return [help, output, projectRoot, version]
       ..sort((a, b) => a.name.compareTo(b.name));
   }
 }
