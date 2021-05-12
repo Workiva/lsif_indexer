@@ -40,16 +40,18 @@ import 'package:path/path.dart' as p;
 
 /// Analysis results for a package.
 class Analyzer {
-  Analyzer({
-    @required this.packageRoot,
-    List<String> filesToAnalyze = const [],
-  }) : _filesToAnalyze = filesToAnalyze {
+  Analyzer(
+      {@required this.packageRoot,
+      List<String> filesToAnalyze = const [],
+      this.packageVersion})
+      : _filesToAnalyze = filesToAnalyze {
     ready = initialize();
   }
 
   final List<String> _filesToAnalyze;
 
   String packageRoot;
+  String packageVersion;
   Directory _packageDir;
   Directory get packageDir => _packageDir ??= Directory(packageRoot).absolute;
   String get packageDirAsUriString => Uri.file(packageDir.path).toString();
@@ -91,7 +93,7 @@ class Analyzer {
     // seemed to be needed, but it at least shouldn't cause any problems.
     await Future.wait(files.map(context.currentSession.getResolvedUnit));
     documents = await Future.wait(files.map(analyzeFile).toList());
-    writeProject(packageDirAsUriString, documents);
+    writeProject(packageDirAsUriString, documents, packageVersion);
   }
 
   /// Analyze and individual file and create a document with all its references and declarations.

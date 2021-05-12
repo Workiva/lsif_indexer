@@ -32,9 +32,10 @@ import 'lsif_graph.dart';
 /// Write out a project based at [projectRoot] containing [documents].
 ///
 /// The actual understanding of the LSIF format is in the graph entities.
-void writeProject(String projectRoot, List<Document> documents) {
+void writeProject(
+    String projectRoot, List<Document> documents, String packageVersion) {
   Metadata(projectRoot).emit();
-  _within(Project(documents), _emitProjectContents);
+  _within(Project(documents, packageVersion), _emitProjectContents);
 }
 
 /// Perform the operation [doThis] between the begin/end events of [scope].

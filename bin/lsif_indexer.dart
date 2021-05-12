@@ -51,10 +51,11 @@ void main(List<String> arguments) async {
 
   Future<void> _analyze() async {
     await Analyzer(
-      packageRoot: config.projectRoot?.absolute?.normalized ??
-          Directory.current.absolute.path,
-      filesToAnalyze: config.rest.map(absolute).toList(),
-    ).analyzePackage();
+            packageRoot: config.projectRoot?.absolute?.normalized ??
+                Directory.current.absolute.path,
+            filesToAnalyze: config.rest.map(absolute).toList(),
+            packageVersion: config.version)
+        .analyzePackage();
   }
 
   await emitter.use(_analyze);
