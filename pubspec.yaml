@@ -7,10 +7,10 @@ environment:
   sdk: '>=2.7.0 <3.0.0'
 
 dependencies:
-  analyzer: 0.41.1
+  analyzer: ">=0.39.0 <0.42.0"
   args: ^1.6.0
   collection: ^1.14.13
-  meta: ^1.0.0
+  meta: ^1.2.2
   path: ^1.7.0
   package_config: ^1.9.3
 
