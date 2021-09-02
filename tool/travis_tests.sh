@@ -2,4 +2,4 @@
 
 set -e
 
-pub run test
+dart test
