@@ -1,0 +1,41 @@
+name: Dart CI
+
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk: [ stable, dev ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dart-lang/setup-dart@v0.2
+        with:
+          sdk: ${{ matrix.sdk }}
+
+      - name: Print Dart SDK version
+        run: dart --version
+
+      - id: install
+        name: Install dependencies
+        run: pub get
+
+      - name: Analyze project source
+        run: dart analyze
+        if: always() && steps.install.outcome == 'success'
+
+      - name: Verify formatting
+        run: dart format --set-exit-if-changed .
+        if: always() && steps.install.outcome == 'success'
+
+      - name: Run tests
+        run: dart test
+        if: always() && steps.install.outcome == 'success'
