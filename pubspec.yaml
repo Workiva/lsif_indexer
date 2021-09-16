@@ -4,7 +4,7 @@ version: 0.1.0
 homepage: https://github.com/Workiva/lsif_indexer
 
 environment:
-  sdk: '>=2.7.0 <3.0.0'
+  sdk: ">=2.11.0 <3.0.0"
 
 dependencies:
   analyzer: 0.41.1
