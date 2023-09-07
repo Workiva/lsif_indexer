@@ -1,5 +1,5 @@
 > [!WARNING]
-> This repo has been deprecated, and its functionality has been replaced by [scip-dart](https://github.com/Workiva/scip-dart). Please refer to that repo for generating precise code intelligence for dart.
+> This repo has been deprecated, and it's functionality replaced by [scip-dart](https://github.com/Workiva/scip-dart). Please refer to that repo for generating precise code intelligence for dart.
 
 # lsif_indexer
 
